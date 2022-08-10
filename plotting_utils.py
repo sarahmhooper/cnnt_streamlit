@@ -6,6 +6,8 @@ Seperate file for plotting images
 import os
 import numpy as np
 
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -15,7 +17,10 @@ def torch_2_numpy(image):
     try:
         return image[0,:,0,:,:].cpu().detach().numpy()
     except:
-        return image
+        try:
+            return image[0,:,0,:,:]
+        except:
+            return image
 
 #------------------------------------------------
 # Plotting functions
