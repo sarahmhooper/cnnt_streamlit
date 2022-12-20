@@ -26,6 +26,7 @@ def torch_2_numpy(image):
 # Plotting functions
 #------------------------------------------------
 
+
 def plot_1_image(image, cmap='gray', path=None, id=None, show=False):
     """
     Plot given 2D+T image as an animation
