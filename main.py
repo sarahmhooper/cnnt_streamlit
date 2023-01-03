@@ -1,76 +1,54 @@
+"""
+Main file for the UI
+
+Keeps track of the pages and shares data in between
+"""
+
 import streamlit as st
-import numpy as np
-import tifffile
-import io
-from io import BytesIO
-import os
-import argparse
-import torch
 
-from utils.plotting_utils import *
-from utils.inference import *
 from utils.utils import *
+from inputs.inputs_class import Inputs_Class
+from model.model_class import Model_Class
+from outputs.outputs_class import Outputs_Class
 
-if "page_num" not in st.session_state:
-    st.session_state.page_num = 0
+def init_session_state():
+    # Initializes the classes and page number
+
+    model_path_dir = arg_parse_model_path_dir()
+
+    if "page_num" not in st.session_state:
+        st.session_state.page_num = 0
+
+    if "inputs_class" not in st.session_state:
+        st.session_state.inputs_class = Inputs_Class()
+
+    if "model_class" not in st.session_state:
+        st.session_state.model_class = Model_Class(model_path_dir=model_path_dir)
+
+    if "outputs_class" not in st.session_state:
+        st.session_state.outputs_class = Outputs_Class()
+
+init_session_state()
+
+from pseudo_pages.page_0 import page_0
+from pseudo_pages.page_1 import page_1
+from pseudo_pages.page_2 import page_2
 
 placeholder = st.empty()
-model_list = set_model_path()
+sst = st.session_state
 
-if st.session_state.page_num == 0:
-    placeholder.empty()
+if sst.page_num == 0:
 
-    with placeholder.container():
+    page_0(placeholder)
 
-        model_name = st.selectbox("Select the model to use for inference", model_list)
+if sst.page_num == 1:
+   
+    page_1(placeholder)
 
-        model_path = os.path.join(st.session_state.model_path_dir, model_name)
-        st.session_state.model_path = model_path
-
-        uploaded_file = st.file_uploader("Choose a file")
-
-        if uploaded_file is not None:
-            # To read file as bytes:
-            bytes_data = BytesIO(uploaded_file.read()) 
-
-            input_class = input_type("asd")
-            input_class.read_noisy_image(bytes_data=bytes_data)
-
-            st.session_state.input_class = input_class
-
-            st.write(f"Given image shape : {input_class.get_noisy_shape()}")
-
-            cutout_shape = get_cutout()
-
-            st.session_state.cutout_shape = cutout_shape
-
-if st.session_state.page_num == 1:
-    placeholder.empty()
-
-    with placeholder.container():
-        
-        model, config = load_model(st.session_state.model_path)
-        st.session_state.model = model
-        st.session_state.config = config
-
-        noisy_cut, clean_pred = run_model(st.session_state.model, [], st.session_state.input_class.get_noisy_image(), st.session_state.cutout_shape)
-
-        st.session_state.noisy_cut = noisy_cut
-        st.session_state.clean_pred = clean_pred
-
-    st.session_state.no_page_change = False
-
-if st.session_state.page_num == 2:
-    placeholder.empty()
-
-    with placeholder.container():
-
-        download_pair(st.session_state.noisy_cut, st.session_state.clean_pred)
-
-        plot_and_show(st.session_state.noisy_cut, st.session_state.clean_pred)
+if sst.page_num == 2:
     
-    st.session_state.no_page_change = False
+    page_2(placeholder)
 
-
-st.button("Next",on_click=nextpage,disabled=(st.session_state.page_num >= 2))
-st.button("Restart",on_click=restart)
+# Render buttons at the bottom of the page to prevent early render
+st.button("Next",on_click=nextpage,disabled=(sst.page_num >= 2))
+st.button("Restart",on_click=restart,disabled=(sst.page_num == 0))

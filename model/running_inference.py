@@ -1,15 +1,20 @@
 """
 File for just inference given model full image and
 desired cutout and overlap
+
+Adjusted for display during streamlit session
 """
+import time
 import torch
 import numpy as np
 from skimage.util.shape import view_as_windows
 
+import streamlit as st
 
-def running_inference(model, image, 
+
+def running_inference_per_image(model, image, 
                     cutout=(24,256,256), overlap=(4,64,64), 
-                    batch_size=8, device="cpu"):
+                    batch_size=8, device="cpu", placeholder=None):
     """
     runs inference by breaking image into cutout shapes with overlaps
     running the patches through the model and then repatching
@@ -32,6 +37,7 @@ def running_inference(model, image,
     model = model.to(device)
     model.eval()
 
+    # Reduce image to 3D numpy
     if image.ndim == 5:
         B, T, C, H, W = image.shape
         assert B==1 and C==1
@@ -67,12 +73,19 @@ def running_inference(model, image,
     # inferring each patch in length of batch_size
     image_batch_pred = np.zeros_like(image_batch, dtype=d_type)
 
+    with placeholder.container():
+        p_bar = st.progress(0)
+
     for i in range(0, image_batch.shape[0], batch_size):
+
+        p_bar.progress(i/image_batch_pred.shape[0])
 
         x_in = image_batch[i:i+batch_size]
         x_in = torch.from_numpy(x_in[:,:,np.newaxis]).to(device)
         # conver to torch and back to numpy
         image_batch_pred[i:i+batch_size] = model(x_in).cpu().detach().numpy().squeeze()
+
+    p_bar.progress(1.0)
     #-----------------------------------------------------------------------
     # setting up the weight matrix
     # matrix_weight defines how much a patch contributes to a pixel
@@ -120,3 +133,69 @@ def running_inference(model, image,
     #-----------------------------------------------------------------------
     # return a 3dim numpy and 5dim torch.tensor for easier followups
     return image_fin, torch.from_numpy(image_fin[np.newaxis,:,np.newaxis]).to(device)
+
+###################################################################################################
+
+def running_inference(model, cut_np_images):
+    """
+    Wrapper for actual inference function
+    Runs inference on cut_np_images on the given model
+    @inputs:
+        - model: loaded pytorch model
+        - cut_np_images: the np_images to be inferred of axis order THW
+    """
+
+    image_list = [x.astype(np.float32) for x in cut_np_images]
+    cutout = (8, 64, 64)
+    overlap = (2, 16, 16)
+    batch_size = 4
+
+    num_images = len(image_list)
+    clean_pred_list = []
+    total_time = 0
+
+    st.write("Starting Inference")
+    st.write("Total Progress:")
+
+    p_bar = st.progress(0)
+
+    placeholder_1 = st.empty()
+    placeholder_2 = st.empty()
+    placeholder_3 = st.empty()
+
+    
+    for i, image in enumerate(image_list):
+
+        p_bar.progress(i/num_images)
+
+        try:
+            start = time.time()
+            with placeholder_1.container():
+                st.write(f"Running Image {i}/{num_images} on GPU")
+                st.write(f"Current Image Progress:")
+            clean_pred, _ = running_inference_per_image(model, image, cutout, overlap, batch_size, device="cuda", placeholder=placeholder_2)
+            torch.cuda.empty_cache()
+        except:
+            start = time.time()
+            with placeholder_1.container():
+                st.write(f"Failed on GPU, Running Image {i}/{num_images} on CPU")
+                st.write(f"Current Image Progress:")
+            clean_pred, _ = running_inference_per_image(model, image, cutout, overlap, batch_size, device="cpu", placeholder=placeholder_2)
+
+        time_taken = time.time() - start
+        total_time += time_taken
+
+        clean_pred_list.append(clean_pred)
+
+        with placeholder_3.container():
+            st.write(f"Image {i}/{num_images} prediction took {time_taken : .3f} seconds")
+
+    p_bar.progress(1.0)
+
+    placeholder_1.empty()
+    placeholder_2.empty()
+    placeholder_3.empty()
+
+    st.write(f"Total time taken: {total_time}")
+
+    return clean_pred_list

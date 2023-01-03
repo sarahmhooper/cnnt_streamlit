@@ -1,2 +1,2 @@
 # cnnt_streamlit
-Streamlit Inference Deployment for CNNT
+Streamlit Inference UI for CNNT
