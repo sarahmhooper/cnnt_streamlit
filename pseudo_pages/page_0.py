@@ -41,8 +41,7 @@ def page_0(placeholder):
 
         display_image_info()
 
-        format_a = get_format_a()
-        format_d = get_format_d()
+        format_a, format_d = get_formats()
         ic.set_format(format_a=format_a, format_d=format_d)
 
         cutout_shape = get_cutout()
@@ -152,14 +151,21 @@ def get_cutout():
 
     return cutout_shape
 
-def get_format_a():
+def get_format_a(col):
 
-    return st.selectbox(
+    with col:
+        return st.radio(
                 "Format of the images (Label of axis)",
                 ("THW", "HWT"))
 
-def get_format_d():
+def get_format_d(col):
 
-    return st.selectbox(
+    with col:
+        return st.radio(
                 "Format of the data (Size of data)",
                 ("8-bit", "16-bit"))
+
+def get_formats():
+
+    col1, col2 = st.columns(2)
+    return get_format_a(col1), get_format_d(col2)
