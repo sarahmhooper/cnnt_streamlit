@@ -37,11 +37,11 @@ def page_0(placeholder):
         if uploaded_files == []:
             st.stop()
 
-        ic.read_inputs_files(uploaded_files)
+        format_a, format_d = ic.read_inputs_files(uploaded_files)
 
         display_image_info()
 
-        format_a, format_d = get_formats()
+        format_a, format_d = get_formats(format_a, format_d)
         ic.set_format(format_a=format_a, format_d=format_d)
 
         cutout_shape = get_cutout()
@@ -151,21 +151,39 @@ def get_cutout():
 
     return cutout_shape
 
-def get_format_a(col):
+def get_format_a(col, format_a):
+    
+    options = ("THW", "HWT")
+
+    if format_a == "THW":
+        index = 0
+
+    if format_a == "HWT":
+        index = 1
 
     with col:
         return st.radio(
-                "Format of the images (Label of axis)",
-                ("THW", "HWT"))
+                "Format of the images (Label of axis \
+                inferred from image. Correct if wrong.)",
+                options, index=index)
 
-def get_format_d(col):
+def get_format_d(col, format_d):
+
+    options = ("8-bit", "16-bit")
+
+    if format_d == "8-bit":
+        index = 0
+
+    if format_d == "16-bit":
+        index = 1
 
     with col:
         return st.radio(
-                "Format of the data (Size of data)",
-                ("8-bit", "16-bit"))
+                "Format of the data (Size of data \
+                inferred from image. Correct if wrong.)",
+                options, index=index)
 
-def get_formats():
+def get_formats(format_a, format_d):
 
     col1, col2 = st.columns(2)
-    return get_format_a(col1), get_format_d(col2)
+    return get_format_a(col1, format_a), get_format_d(col2, format_d)
