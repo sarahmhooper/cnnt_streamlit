@@ -42,7 +42,9 @@ class Inputs_Class():
     def read_inputs_files(self, input_list_raw):
         # Read using the one function
 
-        self.noisy_im_names, self.noisy_im_list = read_inputs(input_list_raw)
+        self.noisy_im_names, self.noisy_im_list, self.format_a, self.format_d = read_inputs(input_list_raw)
+
+        return self.format_a, self.format_d
 
     def set_cutouts(self, cutout_shape):
         # set cutouts for each image
