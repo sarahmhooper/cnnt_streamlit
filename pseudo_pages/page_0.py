@@ -187,3 +187,4 @@ def get_formats(format_a, format_d):
 
     col1, col2 = st.columns(2)
     return get_format_a(col1, format_a), get_format_d(col2, format_d)
+    
