@@ -88,7 +88,7 @@ def get_download_type_and_index(num_images):
 
 def prepare_download():
 
-    return st.checkbox("Prepare Download?")
+    return st.checkbox("Prepare Download? (uncheck unless downloading)")
 
 def index_slider(num_images):
 
