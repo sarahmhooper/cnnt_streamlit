@@ -38,6 +38,47 @@ def read_tiffs(input_list):
 
     return image_list
 
+###################################################################################################
+
+# Infer input formats
+
+def infer_format_a(image):
+    """
+    Infer the axis format of the given image. THW, vs HWT
+    @args:
+        - image: n-D array to infer dim from 
+    @requirements:
+        - only supports 3D arrays for now
+    @returns:
+        - format_a: inferred format of the axis
+    """
+
+    dims = image.shape
+
+    assert image.ndim == 3
+
+    format_a = "THW"
+    if np.argmin(dims) == 0 : format_a = "THW"
+    if np.argmin(dims) == 2 : format_a = "HWT"
+
+    return format_a
+
+def infer_format_d(image):
+    """
+    Infer the data format of the given image. 8-bit, vs 16-bit
+    @args:
+        - image: n-D array to infer from 
+    @requirements:
+        - only supports 8-bit or 16-bit data
+    @returns:
+        - format_d: inferred format of the data
+    """
+
+    format_d = "16-bit"
+    if image.dtype == np.uint16 : format_d = "16-bit"
+    if image.dtype == np.uint8 == 2 : format_d = "8-bit"
+
+    return format_d
 
 ###################################################################################################
 
@@ -67,7 +108,7 @@ def read_inputs(input_list_raw):
     else:
         raise FileTypeNotSupported(f"File type input not supported:{file_ext}")
 
-    return noisy_im_names, noisy_im_list
+    return noisy_im_names, noisy_im_list, infer_format_a(noisy_im_list[0]), infer_format_d(noisy_im_list[0])
 
 ###################################################################################################
 
