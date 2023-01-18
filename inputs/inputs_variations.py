@@ -6,7 +6,7 @@ Currently supported types:
     - .tif/.tiff
 
 (Ideally) Only need to update this file for new input variations
-TODO: more input types: .lif, .ometiff
+TODO: more input types: .ometiff
 """
 
 import pathlib
@@ -15,6 +15,7 @@ import numpy as np
 
 from io import BytesIO
 from utils.utils import *
+from readlif.reader import LifFile
 
 ###################################################################################################
 
@@ -37,6 +38,73 @@ def read_tiffs(input_list):
         assert image.ndim == 3
 
     return image_list
+
+# lif reading helpers start
+
+def iter_t(image, name, c, m, z):
+
+    return [np.array([np.array(im_x) for im_x in image.get_iter_t(z=z, c=c, m=m)])], [name]
+
+def iter_z(image, name, c, m):
+    
+    if image.dims.z == 1:
+        return iter_t(image, name, c, m, 0)
+
+    if image.dims.t == 1:
+        return [np.array([np.array(im_x) for im_x in image.get_iter_z(t=0, c=c, m=m)])], [name]
+
+    tuple_list = [iter_t(image, f"{name}_Z_{z}", c, m, z) for z in range(image.dims.z)]
+    image_list = flatten([x[0] for x in tuple_list])
+    names_list = flatten([x[1] for x in tuple_list])
+
+    return image_list, names_list
+
+def iter_m(image, name, c):
+    
+    if image.dims.m == 1:
+        return iter_z(image, name, c, 0)
+
+    tuple_list = [iter_z(image, f"{name}Tile_{nm}", c, nm) for nm in range(image.dims.m)]
+    image_list = flatten([x[0] for x in tuple_list])
+    names_list = flatten([x[1] for x in tuple_list])
+
+    return image_list, names_list
+
+def iter_c(image, name):
+
+    if image.channels == 1:
+        return iter_m(image, name, 0)
+
+    tuple_list = [iter_m(image, f"{name}Channel_{nc}/", nc) for nc in range(image.channels)]
+    image_list = flatten([x[0] for x in tuple_list])
+    names_list = flatten([x[1] for x in tuple_list])
+
+    return image_list, names_list
+
+# lif reading helpers end
+
+def read_lifs(input_list, lif_names):
+    """
+    read the lif file input consisting of nD images
+    @args:
+        - file_list: a list of LifFile objects
+        - lif_names: names of the lif files
+    @requirements:
+        - byte_data objects should be in lif format
+        - all images in the file should have the same format and dimensions
+    @returns:
+        - noisy_im_list: list of noisy image, eachone as a 3D-array (H, W, T)
+        - noisy_im_names: names of the noisy images, taken from the lif file
+    """
+    file_list = [LifFile(x) for x in input_list]
+
+    for i, file in enumerate(file_list):
+        
+        tuple_list = [iter_c(image, f"{lif_names[i]}/{image.name}_") for image in file.get_iter_image()]
+        noisy_im_list = flatten([x[0] for x in tuple_list])
+        noisy_im_names = flatten([x[1] for x in tuple_list])
+
+    return noisy_im_list, noisy_im_names
 
 ###################################################################################################
 
@@ -76,7 +144,7 @@ def infer_format_d(image):
 
     format_d = "16-bit"
     if image.dtype == np.uint16 : format_d = "16-bit"
-    if image.dtype == np.uint8 == 2 : format_d = "8-bit"
+    if image.dtype == np.uint8 : format_d = "8-bit"
 
     return format_d
 
@@ -105,6 +173,8 @@ def read_inputs(input_list_raw):
 
     if file_ext == ".tif" or file_ext == ".tiff":
         noisy_im_list = read_tiffs(input_list)
+    elif file_ext == ".lif":
+        noisy_im_list, noisy_im_names = read_lifs(input_list, noisy_im_names)
     else:
         raise FileTypeNotSupported(f"File type input not supported:{file_ext}")
 
