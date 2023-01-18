@@ -24,6 +24,9 @@ def arg_parse_model_path_dir():
     args = parser.parse_args()
     return args.model_path_dir
 
+def flatten(l):
+    return [item for sublist in l for item in sublist]
+
 ###################################################################################################
 # Custom exceptions
 
