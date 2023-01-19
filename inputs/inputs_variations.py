@@ -12,6 +12,7 @@ TODO: more input types: .ometiff
 import pathlib
 import tifffile
 import numpy as np
+import streamlit as st
 
 from io import BytesIO
 from utils.utils import *
@@ -163,20 +164,21 @@ def read_inputs(input_list_raw):
     @returns:
         - noisy_im_list: list of noisy image, eachone as a 3D-array (H, W, T)
     """
-    # save names for later
-    noisy_im_names = [x.name for x in input_list_raw]
-    # get extension to select how to read. Assumes all files have same extension. 
-    # TODO: add this check
-    file_ext = pathlib.Path(noisy_im_names[0]).suffix.lower()
-    # convert raw data to bytes data
-    input_list = [BytesIO(x.read()) for x in input_list_raw]
+    with st.spinner("Reading inputs"):
+        # save names for later
+        noisy_im_names = [x.name for x in input_list_raw]
+        # get extension to select how to read. Assumes all files have same extension. 
+        # TODO: add this check
+        file_ext = pathlib.Path(noisy_im_names[0]).suffix.lower()
+        # convert raw data to bytes data
+        input_list = [BytesIO(x.read()) for x in input_list_raw]
 
-    if file_ext == ".tif" or file_ext == ".tiff":
-        noisy_im_list = read_tiffs(input_list)
-    elif file_ext == ".lif":
-        noisy_im_list, noisy_im_names = read_lifs(input_list, noisy_im_names)
-    else:
-        raise FileTypeNotSupported(f"File type input not supported:{file_ext}")
+        if file_ext == ".tif" or file_ext == ".tiff":
+            noisy_im_list = read_tiffs(input_list)
+        elif file_ext == ".lif":
+            noisy_im_list, noisy_im_names = read_lifs(input_list, noisy_im_names)
+        else:
+            raise FileTypeNotSupported(f"File type input not supported:{file_ext}")
 
     return noisy_im_names, noisy_im_list, infer_format_a(noisy_im_list[0]), infer_format_d(noisy_im_list[0])
 
