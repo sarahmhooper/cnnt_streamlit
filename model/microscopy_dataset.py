@@ -1,7 +1,5 @@
 """
 File for microscopy dataset used during fine tuning
-
-TODO: register input pairs
 """
 
 import torch
@@ -11,7 +9,7 @@ from utils.utils import *
 from torch.utils.data import Dataset
 
 from scipy.ndimage import shift
-# from skimage.feature import register_translation # TODO: fix registration
+from skimage.registration import phase_cross_correlation
 
 class MicroscopyDataset(Dataset):
     """
@@ -51,7 +49,7 @@ class MicroscopyDataset(Dataset):
         self.clean_im_list = [normalize_image(clean_im, values=(0, scale), clip=True) for clean_im in clean_im_list]
 
         # Register images to align up better
-        # self.clean_im_list = [self.register_translation_3D(self.noisy_im_list[i], self.clean_im_list[i]) for i in range(len(self.clean_im_list))]
+        self.noisy_im_list = [self.register_translation_3D(self.noisy_im_list[i], self.clean_im_list[i]) for i in range(len(self.noisy_im_list))]
 
     def load_one_sample(self, index):
         """
@@ -135,19 +133,12 @@ class MicroscopyDataset(Dataset):
 
         return ind_file
 
-    # def register_translation_3D(noisy, clean):
-    #     # Register noisy clean pair using translation
+    def register_translation_3D(self, noisy, clean):
+        # Register noisy clean pair using translation
 
-    #     def tranlation_2D(im1, im2):
+        z_off, y_off, x_off = phase_cross_correlation(clean, noisy, return_error=False)
 
-    #         shifted, error, diff = register_translation(im2, im1)
-
-    #         yoff = -shifted[1]
-    #         xoff = -shifted[0]
-
-    #         return shift(im2, shift=(xoff, yoff), mode="reflect")
-
-    #     return np.array([tranlation_2D(noisy[i], clean[i]) for i in range(clean.shape[0])])
+        return shift(noisy, shift=(z_off, y_off, x_off), mode="reflect")
 
     def __len__(self):
 
