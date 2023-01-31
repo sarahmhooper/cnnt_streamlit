@@ -14,7 +14,7 @@ from outputs.outputs_class import Outputs_Class
 def init_session_state():
     # Initializes the classes and page number
 
-    model_path_dir = arg_parse_model_path_dir()
+    model_path_dir, check_path = arg_parse_model_path_dir()
 
     if "page_num" not in st.session_state:
         st.session_state.page_num = 0
@@ -23,7 +23,7 @@ def init_session_state():
         st.session_state.inputs_class = Inputs_Class()
 
     if "model_class" not in st.session_state:
-        st.session_state.model_class = Model_Class(model_path_dir=model_path_dir)
+        st.session_state.model_class = Model_Class(model_path_dir=model_path_dir, check_path=check_path)
 
     if "outputs_class" not in st.session_state:
         st.session_state.outputs_class = Outputs_Class()
@@ -34,20 +34,20 @@ from pseudo_pages.page_0 import page_0
 from pseudo_pages.page_1 import page_1
 from pseudo_pages.page_2 import page_2
 
-placeholder = st.empty()
 sst = st.session_state
 
 if sst.page_num == 0:
+    page_0()
 
-    page_0(placeholder)
+if sst.page_num == 0.5: # Extra page to flush out the screen
+    st.write("Setting up")
+    st.write("Click \"Next\" to begin training")
 
 if sst.page_num == 1:
-   
-    page_1(placeholder)
+    page_1()
 
-if sst.page_num == 2:
-    
-    page_2(placeholder)
+if sst.page_num == 2 or sst.page_num == 1.5: # 1.5 because incrementing with 0.5
+    page_2()
 
 # Render buttons at the bottom of the page to prevent early render
 st.button("Next",on_click=nextpage,disabled=(sst.page_num >= 2))

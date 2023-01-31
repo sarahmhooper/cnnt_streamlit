@@ -1,7 +1,7 @@
 """
 Second page of the UI
 
-Just runs the inference cycle and shows the progress
+Runs the fine tuning cycle and shows the progress
 Requires a click to get to next page
 """
 
@@ -18,14 +18,12 @@ mc : Model_Class = st.session_state.model_class
 oc : Outputs_Class = st.session_state.outputs_class
 
 
-def page_1(placeholder):
+def page_1():
 
-    placeholder.empty()
+    mc.load_model()
 
-    with placeholder.container():
+    train_set, val_set = mc.prepare_train_n_val(noisy_im_list=ic.get_noisy_ims(), clean_im_list=ic.get_clean_ims(), scale=ic.get_scale())
+    model_tuned, config = mc.run_finetuning(train_set, val_set)
 
-        mc.load_model()
-
-        cut_noisy_im_list, cut_cpred_im_list = mc.run_inference(cut_np_images=ic.get_cut_np_images())
-
-        oc.set_lists(noisy_im_list=cut_noisy_im_list, noisy_im_names=ic.get_noisy_im_names(), cpred_im_list=cut_cpred_im_list)
+    oc.set_model(model=model_tuned, config=config, infer_func=mc.run_inference, scale=ic.get_scale())
+    oc.set_lists(noisy_im_list=ic.get_noisy_ims(), noisy_im_names=ic.get_noisy_im_names(), clean_im_list=ic.get_clean_ims())

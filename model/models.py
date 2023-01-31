@@ -409,7 +409,7 @@ class CNNT_base_model_runtime(nn.Module):
         self.height = config.height[0]
         self.width = config.width[0]
 
-    def set_up_scheduling(self, train_total_len):
+    def set_up_scheduling(self):
         if self.config.optim is not None:
 
             if (self.config.optim  == "adamw"):
@@ -443,16 +443,16 @@ class CNNT_base_model_runtime(nn.Module):
                 self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, 5, gamma=0.8, last_epoch=-1, verbose=True)
                 self.scheduler_on_batch = False
 
-            if (self.config.scheduler == "OneCycleLR"):
-                self.scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.config.global_lr,
-                                                                total_steps=train_total_len, 
-                                                                pct_start=0.3,
-                                                                anneal_strategy='cos', cycle_momentum=True,
-                                                                base_momentum=0.85, max_momentum=0.95,
-                                                                div_factor=25,
-                                                                final_div_factor=10000,
-                                                                three_phase=False,
-                                                                last_epoch=-1)
+            # if (self.config.scheduler == "OneCycleLR"):
+            #     self.scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optim, max_lr=self.config.global_lr,
+            #                                                     total_steps=train_total_len, 
+            #                                                     pct_start=0.3,
+            #                                                     anneal_strategy='cos', cycle_momentum=True,
+            #                                                     base_momentum=0.85, max_momentum=0.95,
+            #                                                     div_factor=25,
+            #                                                     final_div_factor=10000,
+            #                                                     three_phase=False,
+            #                                                     last_epoch=-1)
 
                 self.scheduler_on_batch = True
         else:
@@ -504,38 +504,35 @@ class CNNT_base_model_runtime(nn.Module):
 
         return optimizer
 
-    # def set_up_loss(self, loss, loss_weights, loss_args, device='cpu', ct_weight_loss=False, decaying_loss=False, loss_2=None, loss_2_weights=None, loss_2_args=None, half_life=10):
+    def set_up_loss(self, loss, loss_weights, loss_args, device='cpu'):
 
-    #     if decaying_loss:
-    #         return Image_Enhancement_Decaying_Combined_Loss(loss, loss_weights, loss_args, loss_2, loss_2_weights, loss_2_args, half_life, device, ct_weight_loss)
+        loss_f = Image_Enhancement_Combined_Loss()
+        for ind, l in enumerate(loss):
+            if(l == "mse"):
+                loss_f.add_loss(Weighted_MSE_Complex_Loss(), w=loss_weights[ind], condition=loss_args[ind])
 
-    #     loss_f = Image_Enhancement_Combined_Loss(ct_weight_loss)
-    #     for ind, l in enumerate(loss):
-    #         if(l == "mse"):
-    #             loss_f.add_loss(Weighted_MSE_Complex_Loss(), w=loss_weights[ind], condition=loss_args[ind])
+            elif(l == "l1"):
+                loss_f.add_loss(Weighted_L1_Complex_Loss(), w=loss_weights[ind], condition=loss_args[ind])
 
-    #         elif(l == "l1"):
-    #             loss_f.add_loss(Weighted_L1_Complex_Loss(), w=loss_weights[ind], condition=loss_args[ind])
+            elif(l == "ssim"):
+                loss_f.add_loss(Weighted_SSIM_Complex_Loss(reduction='mean', window_size=7, device=device), w=loss_weights[ind], condition=loss_args[ind])
 
-    #         elif(l == "ssim"):
-    #             loss_f.add_loss(Weighted_SSIM_Complex_Loss(reduction='mean', window_size=7, device=device), w=loss_weights[ind], condition=loss_args[ind])
+            elif(l == "ssim3D"):
+                loss_f.add_loss(Weighted_SSIM3D_Complex_Loss(reduction='mean', window_size=7, device=device), w=loss_weights[ind], condition=loss_args[ind])
 
-    #         elif(l == "ssim3D"):
-    #             loss_f.add_loss(Weighted_SSIM3D_Complex_Loss(reduction='mean', window_size=7, device=device), w=loss_weights[ind], condition=loss_args[ind])
+            elif(l == "sobel"):
+                loss_f.add_loss(Weighted_Sobel_Complex_Loss(device=device), w=loss_weights[ind], condition=loss_args[ind])
 
-    #         elif(l == "sobel"):
-    #             loss_f.add_loss(Weighted_Sobel_Complex_Loss(device=device), w=loss_weights[ind], condition=loss_args[ind])
+            else:
+                raise f"loss type not supported:{l}"
 
-    #         else:
-    #             raise f"loss type not supported:{l}"
-
-    #     return loss_f
+        return loss_f
 
     def save(self, epoch):
         """
         Save the current model weights on the given epoch
         """
-        save_file_name = f"{self.config.date}_epoch-{epoch}.pth"
+        save_file_name = f"{self.config.model_file_name}_epoch-{epoch}.pt"
         save_file_path = os.path.join(self.config.check_path, save_file_name)
         torch.save(self.state_dict(), save_file_path)
 
@@ -559,7 +556,7 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
     The full CNN_Transformer model for Microscopy Denoising
     """
 
-    def __init__(self, config, train_total_len):
+    def __init__(self, config):
         super().__init__(config=config)
 
         K = config.kernel_size
@@ -596,16 +593,14 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
             Conv2DExt(16, C_out, kernel_size=K, stride=S, padding=P, bias=True)
         )
 
-        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # setup loss function and optimizer
-        # self.loss_f = self.set_up_loss(config.loss, config.loss_weights, config.loss_args, device=device, ct_weight_loss=config.ct_weight_loss,
-        #                     decaying_loss=config.decaying_loss, loss_2=config.loss_2, loss_2_weights=config.loss_2_weights, loss_2_args=config.loss_2_args, half_life=config.half_life)
+        self.loss_f = self.set_up_loss(config.loss, config.loss_weights, config.loss_args, device=device)
 
-        # self.loss_f_test = self.set_up_loss(config.loss, config.loss_weights, config.loss_args, device='cpu', ct_weight_loss=config.ct_weight_loss,
-        #                     decaying_loss=config.decaying_loss, loss_2=config.loss_2, loss_2_weights=config.loss_2_weights, loss_2_args=config.loss_2_args, half_life=config.half_life)
+        self.loss_f_test = self.set_up_loss(config.loss, config.loss_weights, config.loss_args, device='cpu')
 
-        self.set_up_scheduling(train_total_len=train_total_len)
+        self.set_up_scheduling()
 
         # if a load checkpoint is given, load it
         if config.load_path != None:
@@ -633,5 +628,399 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
         # separate loss func to compute loss on cpu on test set
         loss = self.loss_f_test(output, targets, weights, inputs, epoch)
         return loss
+
+###################################################################################################
+# All different types of losses
+
+class Sobel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.filter = nn.Conv2d(in_channels=1, out_channels=2, kernel_size=3, stride=1, padding=1, bias=False)
+
+        Gx = torch.tensor([[2.0, 0.0, -2.0], [4.0, 0.0, -4.0], [2.0, 0.0, -2.0]])
+        Gy = torch.tensor([[2.0, 4.0, 2.0], [0.0, 0.0, 0.0], [-2.0, -4.0, -2.0]])
+        G = torch.cat([Gx.unsqueeze(0), Gy.unsqueeze(0)], 0)
+        G = G.unsqueeze(1)
+        self.filter.weight = nn.Parameter(G, requires_grad=False)
+
+    def forward(self, img):
+        x = self.filter(img)
+        x = torch.mul(x, x)
+        x = torch.sum(x, dim=1, keepdim=True)
+        x = torch.sqrt(x)
+        return x
+
+class Weighted_Sobel_Complex_Loss:
+    """
+    Weighted loss for complex with Sobel operator
+    """
+    def __init__(self, device='cpu'):
+        self.sobel = Sobel()
+        self.sobel.to(device=device)
+
+    def __call__(self, outputs, targets, weights):
+
+        B, T, C, H, W = targets.shape
+
+        if(C==2):
+            outputs_im = torch.sqrt(outputs[:,:,0,:,:]*outputs[:,:,0,:,:] + outputs[:,:,1,:,:]*outputs[:,:,1,:,:])
+            targets_im = torch.sqrt(targets[:,:,0,:,:]*targets[:,:,0,:,:] + targets[:,:,1,:,:]*targets[:,:,1,:,:])
+        else:
+            outputs_im = outputs
+            targets_im = targets
+
+        outputs_im = torch.reshape(outputs_im, (B*T, 1, H, W))
+        targets_im = torch.reshape(targets_im, (B*T, 1, H, W))
+        diff_sobel_square = torch.square(self.sobel(outputs_im)-self.sobel(targets_im))
+
+        if(weights is not None):
+            if(weights.ndim==2):
+                weights = torch.reshape(weights, (outputs.shape[0], T, 1, 1))
+                weights_used = weights.reshape(B*T)
+            elif(weights.ndim==5):
+                weights_used = weights.reshape(B*T, 1, H, W)
+            else:
+                weights = torch.reshape(weights, (outputs.shape[0], 1, 1, 1))
+                weights_used = weights.repeat(1, T, 1, 1).reshape(B*T)
+            v_sobel = torch.sum(weights_used[:, None, None, None] * diff_sobel_square) / torch.sum(weights_used)
+        else:
+            v_sobel = torch.sum(diff_sobel_square)
+
+        if(torch.any(torch.isnan(v_sobel))):
+            v_sobel = 0.0
+
+        return torch.sqrt(v_sobel) / (B*T) / (H*W)
+
+class Weighted_SSIM_Complex_Loss:
+    """
+    Weighted loss for complex with SSIM
+    """
+    def __init__(self, reduction='mean', window_size=7, device='cpu'):
+        self.reduction=reduction
+        self.ssim_loss = SSIM(size_average=False, window_size=window_size, device=device)
+
+    def __call__(self, outputs, targets, weights):
+
+        B, T, C, H, W = targets.shape
+        if(C==2):
+            outputs_im = torch.sqrt(outputs[:,:,0,:,:]*outputs[:,:,0,:,:] + outputs[:,:,1,:,:]*outputs[:,:,1,:,:])
+            targets_im = torch.sqrt(targets[:,:,0,:,:]*targets[:,:,0,:,:] + targets[:,:,1,:,:]*targets[:,:,1,:,:])
+        else:
+            outputs_im = outputs
+            targets_im = targets
+
+        outputs_im = torch.reshape(outputs_im, (B*T, 1, H, W))
+        targets_im = torch.reshape(targets_im, (B*T, 1, H, W))
+        if(weights is not None):
+            if(weights.ndim==2):
+                weights = torch.reshape(weights, (outputs.shape[0], T, 1, 1))
+                weights_used = weights.reshape(B*T)
+            elif(weights.ndim==5):
+                weights_used = weights.reshape(B*T, 1, H, W)
+            else:
+                weights = torch.reshape(weights, (outputs.shape[0], 1, 1, 1))
+                weights_used = weights.repeat(1, T, 1, 1).reshape(B*T)
+            if weights.ndim==5:
+                v_ssim = torch.mean(self.ssim_loss(weights_used*outputs_im, weights_used*targets_im)) #/ torch.sum(weights_used)
+            else:
+                v_ssim = torch.sum(weights_used*self.ssim_loss(outputs_im, targets_im)) / torch.sum(weights_used)
+        else:
+            v_ssim = torch.mean(self.ssim_loss(outputs_im, targets_im))
+
+        if(torch.any(torch.isnan(v_ssim))):
+            v_ssim = 1.0
+
+        return (1.0-v_ssim)
+
+class Weighted_SSIM3D_Complex_Loss:
+    """
+    Weighted loss for complex with SSIM3D
+    """
+    def __init__(self, reduction='mean', window_size=7, device='cpu'):
+        self.reduction=reduction
+        self.ssim_loss = SSIM3D(size_average=False, window_size=window_size, device=device)
+
+    def __call__(self, outputs, targets, weights):
+
+        B, T, C, H, W = targets.shape
+        if(C==2):
+            outputs_im = torch.sqrt(outputs[:,:,0,:,:]*outputs[:,:,0,:,:] + outputs[:,:,1,:,:]*outputs[:,:,1,:,:])
+            targets_im = torch.sqrt(targets[:,:,0,:,:]*targets[:,:,0,:,:] + targets[:,:,1,:,:]*targets[:,:,1,:,:])
+        else:
+            outputs_im = outputs
+            targets_im = targets
+
+        outputs_im = torch.permute(outputs_im, (0, 2, 1, 3, 4))
+        targets_im = torch.permute(targets_im, (0, 2, 1, 3, 4))
+        if(weights is not None):
+            if(weights.ndim==2):
+                weights = torch.reshape(weights, (outputs.shape[0], T, 1, 1))
+                weights_used = weights.reshape(B*T)
+            elif(weights.ndim==5):
+                weights_used = weights.reshape(B*T, 1, H, W)
+            else:
+                weights = torch.reshape(weights, (outputs.shape[0], 1, 1, 1))
+                weights_used = weights.repeat(1, T, 1, 1).reshape(B*T)
+            if weights.ndim==5:
+                v_ssim = torch.mean(self.ssim_loss(weights_used*outputs_im, weights_used*targets_im)) #/ torch.sum(weights_used)
+            else:
+                v_ssim = torch.sum(weights_used*self.ssim_loss(outputs_im, targets_im)) / torch.sum(weights_used)
+        else:
+            v_ssim = torch.mean(self.ssim_loss(outputs_im, targets_im))
+
+        if(torch.any(torch.isnan(v_ssim))):
+            v_ssim = 1.0
+
+        return (1.0-v_ssim)
+
+class Weighted_L1_Complex_Loss:
+    """
+    Weighted L1 loss for complex
+    """
+    def __init__(self, reduction='mean'):
+        self.reduction=reduction
+
+    def __call__(self, outputs, targets, weights):
+
+        B, T, C, H, W = targets.shape
+
+        if(C==2):
+            diff_L1 = torch.abs(outputs[:,:,0,:,:]-targets[:,:,0,:,:]) + torch.abs(outputs[:,:,1,:,:]-targets[:,:,1,:,:])
+        else:
+            diff_L1 = torch.abs(outputs-targets)
+
+        if(weights is not None):
+            if(weights.ndim==2):
+                weights = torch.reshape(weights, (outputs.shape[0], T, 1, 1))
+                v_l1 = torch.sum(weights.reshape(B,T,1,1,1) * diff_L1.reshape(B,T,1,H,W)) / torch.sum(weights)
+            else:
+                weights = torch.reshape(weights, (outputs.shape[0], 1, 1, 1))
+                v_l1 = torch.sum(weights.reshape(B,1,1,1,1) * diff_L1.reshape(B,T,1,H,W)) / torch.sum(weights)
+        else:
+            v_l1 = torch.sum(diff_L1.reshape(B,T,1,H,W))
+
+        return v_l1 / (B*T) / (H*W)
+
+class Weighted_MSE_Complex_Loss:
+    """
+    Weighted MSE loss for complex
+    """
+    def __init__(self, reduction='mean'):
+        self.reduction=reduction
+
+    def __call__(self, outputs, targets, weights):
+
+        B, T, C, H, W = targets.shape
+        if(C==2):
+            diff_mag_square = torch.square(outputs[:,:,0,:,:]-targets[:,:,0,:,:]) + torch.square(outputs[:,:,1,:,:]-targets[:,:,1,:,:])
+        else:
+            diff_mag_square = torch.square(outputs-targets)
+
+        if(weights is not None):
+            if(weights.ndim==2):
+                weights = torch.reshape(weights, (outputs.shape[0], T, 1, 1))
+                v_l2 = torch.sum(weights.reshape(B,T,1,1,1) * diff_mag_square.reshape(B,T,1,H,W)) / torch.sum(weights)
+            else:
+                weights = torch.reshape(weights, (outputs.shape[0], 1, 1, 1))
+                v_l2 = torch.sum(weights.reshape(B,1,1,1,1) * diff_mag_square.reshape(B,T,1,H,W)) / torch.sum(weights)
+        else:
+            v_l2 = torch.sum(diff_mag_square.reshape(B,T,1,H,W))
+
+        return torch.sqrt(v_l2) / (B*T) / (H*W)
+
+class PSNR:
+    """
+    PSNR for metric comparison
+    """
+    def __init__(self, reduction='mean'):
+        self.reduction=reduction
+
+    def __call__(self, outputs, targets):
+
+        return -4.342944819 * torch.log(torch.mean(torch.square(targets - outputs)))
+
+###################################################################################################
+
+class Image_Enhancement_Combined_Loss:
+    """Combined loss for image enhancement
+    """
+
+    def __init__(self):
+        self.losses = []
+
+    def add_loss(self, a_loss, w=1.0, condition=0):
+        self.losses.append((a_loss, w, condition))
+
+    def __call__(self, outputs, targets, weights=None, inputs=None, epoch=None): # adding epoch here to keep code consistent
+
+        assert len(self.losses) > 0
+
+        if self.losses[0][2]: # loss [0][2] is an int but only 0 1 for now so can work as a condition
+            combined_loss = self.losses[0][1] * self.losses[0][0](outputs=outputs, targets=inputs, weights=weights)
+        else:
+            combined_loss = self.losses[0][1] * self.losses[0][0](outputs=outputs, targets=targets, weights=None)
+
+        for k in range(1,len(self.losses)):
+            if self.losses[k][2]:
+                combined_loss += self.losses[k][1] * self.losses[k][0](outputs=outputs, targets=inputs, weights=weights)
+            else:
+                combined_loss += self.losses[k][1] * self.losses[k][0](outputs=outputs, targets=targets, weights=None)
+
+        return combined_loss
+
+    def __str__(self):
+        content = f"Image_Enhancement_Combined_Loss, {len(self.losses)} losses\n"
+        for l in self.losses:
+            content += f"loss - {type(l[0])}, weights {l[1]}\n"
+
+        return content
+
+
+###################################################################################################
+
+"""
+A pytorch SSIM and SSIM 3D implementation
+"""
+
+
+import torch
+import torch.nn.functional as F
+from torch.autograd import Variable
+import numpy as np
+from math import exp
+
+def gaussian(window_size, sigma):
+    gauss = torch.Tensor([exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
+    return gauss/gauss.sum()
+
+def create_window(window_size, channel):
+    _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
+    _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
+    window = Variable(_2D_window.expand(channel, 1, window_size, window_size).contiguous())
+    return window
+
+def create_window_3D(window_size, channel):
+    _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
+    _2D_window = _1D_window.mm(_1D_window.t())
+    _3D_window = _1D_window.mm(_2D_window.reshape(1, -1)).reshape(window_size, window_size, window_size).float().unsqueeze(0).unsqueeze(0)
+    window = Variable(_3D_window.expand(channel, 1, window_size, window_size, window_size).contiguous())
+    return window
+
+def _ssim(img1, img2, window, window_size, channel, size_average = True):
+    mu1 = F.conv2d(img1, window, padding = window_size//2, groups = channel)
+    mu2 = F.conv2d(img2, window, padding = window_size//2, groups = channel)
+
+    mu1_sq = mu1.pow(2)
+    mu2_sq = mu2.pow(2)
+    mu1_mu2 = mu1*mu2
+
+    sigma1_sq = F.conv2d(img1*img1, window, padding = window_size//2, groups = channel) - mu1_sq
+    sigma2_sq = F.conv2d(img2*img2, window, padding = window_size//2, groups = channel) - mu2_sq
+    sigma12 = F.conv2d(img1*img2, window, padding = window_size//2, groups = channel) - mu1_mu2
+
+    C1 = 0.01**2
+    C2 = 0.03**2
+
+    ssim_map = ((2*mu1_mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2))
+
+    if size_average:
+        return ssim_map.mean()
+    else:
+        return ssim_map.mean(1).mean(1).mean(1)
+
+def _ssim_3D(img1, img2, window, window_size, channel, size_average = True):
+    mu1 = F.conv3d(img1, window, padding = window_size//2, groups = channel)
+    mu2 = F.conv3d(img2, window, padding = window_size//2, groups = channel)
+
+    mu1_sq = mu1.pow(2)
+    mu2_sq = mu2.pow(2)
+
+    mu1_mu2 = mu1*mu2
+
+    sigma1_sq = F.conv3d(img1*img1, window, padding = window_size//2, groups = channel) - mu1_sq
+    sigma2_sq = F.conv3d(img2*img2, window, padding = window_size//2, groups = channel) - mu2_sq
+    sigma12 = F.conv3d(img1*img2, window, padding = window_size//2, groups = channel) - mu1_mu2
+
+    C1 = 0.01**2
+    C2 = 0.03**2
+
+    ssim_map = ((2*mu1_mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2))
+
+    if size_average:
+        return ssim_map.mean()
+    else:
+        return ssim_map.mean(1).mean(1).mean(1).mean(1)
+
+class SSIM(torch.nn.Module):
+    def __init__(self, window_size = 11, size_average = True, device='cpu'):
+        super(SSIM, self).__init__()
+        self.window_size = window_size
+        self.size_average = size_average
+        self.channel = 1
+        self.window = create_window(window_size, self.channel)
+        self.window = self.window.to(device=device, dtype=torch.float32)
+
+    def forward(self, img1, img2):
+        (_, channel, _, _) = img1.size()
+
+        if channel == self.channel and self.window.data.type() == img1.data.type():
+            window = self.window
+        else:
+            window = create_window(self.window_size, channel)
+            
+            if img1.is_cuda:
+                window = window.cuda(img1.get_device())
+            window = window.type_as(img1)
+            
+            self.window = window
+            self.channel = channel
+
+        return _ssim(img1, img2, window, self.window_size, channel, self.size_average)
+
+class SSIM3D(torch.nn.Module):
+    def __init__(self, window_size = 11, size_average = True, device="cpu"):
+        super(SSIM3D, self).__init__()
+        self.window_size = window_size
+        self.size_average = size_average
+        self.channel = 1
+        self.window = create_window_3D(window_size, self.channel)
+        self.window = self.window.to(device=device, dtype=torch.float32)
+
+    def forward(self, img1, img2):
+        (_, channel, _, _, _) = img1.size()
+
+        if channel == self.channel and self.window.data.type() == img1.data.type():
+            window = self.window
+        else:
+            window = create_window_3D(self.window_size, channel)
+            
+            if img1.is_cuda:
+                window = window.cuda(img1.get_device())
+            window = window.type_as(img1)
+            
+            self.window = window
+            self.channel = channel
+
+        return _ssim_3D(img1, img2, window, self.window_size, channel, self.size_average)
+
+def ssim(img1, img2, window_size = 11, size_average = True):
+    (_, channel, _, _) = img1.size()
+    window = create_window(window_size, channel)
+
+    if img1.is_cuda:
+        window = window.cuda(img1.get_device())
+    window = window.type_as(img1)
+    
+    return _ssim(img1, img2, window, window_size, channel, size_average)
+
+def ssim3D(img1, img2, window_size = 11, size_average = True):
+    (_, channel, _, _, _) = img1.size()
+    window = create_window_3D(window_size, channel)
+    
+    if img1.is_cuda:
+        window = window.cuda(img1.get_device())
+    window = window.type_as(img1)
+    
+    return _ssim_3D(img1, img2, window, window_size, channel, size_average)
 
 ###################################################################################################

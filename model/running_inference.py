@@ -146,6 +146,7 @@ def running_inference(model, cut_np_images):
     """
 
     image_list = [x.astype(np.float32) for x in cut_np_images]
+    #TODO: calibrate on machine setup
     cutout = (8, 64, 64)
     overlap = (2, 16, 16)
     batch_size = 4

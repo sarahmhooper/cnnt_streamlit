@@ -1,15 +1,16 @@
 """
 First page of the UI
 
-Used the gather the inputs and information:
+Used to set up model configuration and get inputs
 - model name
 - noisy images
 - axis order
 - data type
-- cutouts
+- config
 """
 
 import math
+import datetime
 import streamlit as st
 
 from utils.utils import *
@@ -22,44 +23,46 @@ ic : Inputs_Class = st.session_state.inputs_class
 mc : Model_Class = st.session_state.model_class
 oc : Outputs_Class = st.session_state.outputs_class
 
-def page_0(placeholder):
+def page_0():
 
-    placeholder.empty()
     model_list = mc.get_model_list()
 
-    with placeholder.container():
+    model_name = st.selectbox("Select the model to use for fine tuning", model_list)
+    mc.set_model_path(model_name=model_name)
 
-        model_name = st.selectbox("Select the model to use for inference", model_list)
-        mc.set_model_path(model_name=model_name)
+    config_update_dict = get_config_update()
 
-        uploaded_files = st.file_uploader("Choose a file", accept_multiple_files=True)
+    noisy_images = st.file_uploader("Noisy Images", accept_multiple_files=True)
+    clean_images = st.file_uploader("Clean Images", accept_multiple_files=True)
 
-        if uploaded_files == []:
-            st.stop()
+    if noisy_images == [] or clean_images == []:
+        st.stop()
 
-        format_a, format_d = ic.read_inputs_files(uploaded_files)
+    format_a, format_d = ic.read_inputs_files(noisy_images, clean_images)
 
-        display_image_info()
+    display_image_info()
 
-        format_a, format_d = get_formats(format_a, format_d)
-        ic.set_format(format_a=format_a, format_d=format_d)
+    format_a, format_d = get_formats(format_a, format_d)
+    ic.set_format(format_a=format_a, format_d=format_d)
 
-        cutout_shape = get_cutout()
-        ic.set_cutouts(cutout_shape=cutout_shape)
+    mc.set_config_update_dict(config_update_dict)
 
 def display_image_info():
 
     def build_info_table(start, end):
 
-        name_dict = {}
+        noisy_name_dict = {}
+        clean_name_dict = {}
         shape_dict = {}
 
         for i in range(start, end):
-            name_dict[f"{i}"] = ic.get_noisy_im_name(i)
+            noisy_name_dict[f"{i}"] = ic.get_noisy_im_name(i)
+            clean_name_dict[f"{i}"] = ic.get_clean_im_name(i)
             shape_dict[f"{i}"] = ic.get_noisy_im_shape(i)
 
         final_dict = {
-            "Name":name_dict,
+            "Noisy":noisy_name_dict,
+            "Clean":clean_name_dict,
             "Shape":shape_dict,
         }
 
@@ -82,74 +85,78 @@ def display_image_info():
 
     return
 
-def get_cutout():
-    
-    cut_type = st.selectbox(
-                "Select the shape for inference",
-                ("Complete Image", "Random Patch", "Custom Patch"))
+def get_config_update():
+    #TODO: caliburate on machine setup
 
-    if cut_type == "Complete Image":
-        cutout_shape = "complete"
-    elif cut_type == "Random Patch":
-        cutout_shape = "random"
-    elif cut_type == "Custom Patch":
+    config_update_dict = {}
 
-        st.write("Out of bounds will be clipped to max values")
+    def get_name():
 
-        col1, col2 = st.columns(2)
+        now = datetime.datetime.now()
+        now = now.strftime("%m-%d-%Y_T%H-%M-%S")
+        config_update_dict["date"] = now
+
+        return st.text_input("Model Name", value=f"Model_{now}")
+
+    def get_epoch():
+
+        return st.number_input("Number of Epochs", value=30, min_value=0, format="%d")
+
+    def get_cutout():
+
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-
-            t_cutout_1 = st.selectbox(
-                        "Time cutout start",
-                        (0, 16, 32, 64, "custom"))
-
-            if t_cutout_1 == "custom":
-                t_cutout_1 = st.number_input("Time cutout start (custom)", min_value=0, format="%d")
-
-            h_cutout_1 = st.selectbox(
-                        "Height cutout start",
-                        (0, 64, 128, 256, 512, "custom"))
-
-            if h_cutout_1 == "custom":
-                h_cutout_1 = st.number_input("Height cutout start (custom)", min_value=0, format="%d")
-
-            w_cutout_1 = st.selectbox(
-                        "Width cutout start",
-                        (0, 64, 128, 256, 512, "custom"))
-
-            if w_cutout_1 == "custom":
-                w_cutout_1 = st.number_input("Width cutout start (custom)", min_value=0, format="%d")
-
+            time_c = st.number_input("Time Cutout", min_value=2, format="%d", value=16)
         with col2:
+            height = st.multiselect("Height Cutout(s)", [64, 128, 160, 256], default=128)
+        with col3:
+            widthc = st.multiselect("Width Cutout(s)", [64, 128, 160, 256], default=128)
 
-            t_cutout_2 = st.selectbox(
-                        "Time cutout end",
-                        (8, 16, 32, 64, "custom"))
+        return time_c, height, widthc
 
-            if t_cutout_2 == "custom":
-                t_cutout_2 = st.number_input("Time cutout end (custom)", min_value=0, format="%d")
+    def get_lr():
 
-            h_cutout_2 = st.selectbox(
-                        "Height cutout end",
-                        (64, 128, 256, 512, 1024, "custom"))
+        return st.number_input("Learning Rate", min_value=0.0, format="%f", value=0.000025)
 
-            if h_cutout_2 == "custom":
-                h_cutout_2 = st.number_input("Height cutout end (custom)", min_value=0, format="%d")
+    def get_batch_size():
 
-            w_cutout_2 = st.selectbox(
-                        "Width cutout end",
-                        (64, 128, 256, 512, 1024, "custom"))
+        return st.number_input("Batch Size", min_value=1, format="%d", value=8)
 
-            if w_cutout_2 == "custom":
-                w_cutout_2 = st.number_input("Width cutout end (custom)", min_value=0, format="%d")
+    def get_loss():
 
-        cutout_shape = (t_cutout_1, t_cutout_2, h_cutout_1, h_cutout_2, w_cutout_1, w_cutout_2)
+        return st.multiselect("Loss(es)", ["ssim", "ssim3D", "l1", "mse", "sobel"], default="ssim")
 
-        st.write(f"Cutout shape is :[{cutout_shape[0]}:{cutout_shape[1]}, {cutout_shape[2]}: \
-                                     {cutout_shape[3]}, {cutout_shape[4]}:{cutout_shape[5]}]")
+    def get_loss_weights(n):
 
-    return cutout_shape
+        col_list = st.columns(n)
+        loss_weights = [0 for _ in range(n)]
+
+        for i in range(n):
+
+            with col_list[i]:
+                loss_weights[i] = st.number_input(f"Loss {i} weight", min_value=0.0, format="%f", value=1.0)
+
+        return loss_weights
+
+    def get_save_cycle():
+
+        return st.number_input("Save Cycle (Epochs between each model save and image show)", min_value=1, format="%d", value=5)
+    
+    config_update_dict["model_file_name"] = get_name()
+
+    col1, col2, col3 = st.columns(3)
+    with col1: config_update_dict["num_epochs"] = get_epoch()
+    with col2: config_update_dict["global_lr"] = get_lr()
+    with col3: config_update_dict["batch_size"] = get_batch_size()
+
+    config_update_dict["time"], config_update_dict["height"], config_update_dict["width"] = get_cutout()
+    config_update_dict["loss"] = get_loss()
+    n_loss = len(config_update_dict["loss"])
+    if n_loss > 1 : config_update_dict["loss_weights"] = get_loss_weights(n_loss)
+    config_update_dict["save_cycle"] = get_save_cycle()
+
+    return config_update_dict
 
 def get_format_a(col, format_a):
     
