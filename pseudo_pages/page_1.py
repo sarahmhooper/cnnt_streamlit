@@ -22,7 +22,8 @@ def page_1():
 
     mc.load_model()
 
-    train_set, val_set = mc.prepare_train_n_val(noisy_im_list=ic.get_noisy_ims(), clean_im_list=ic.get_clean_ims(), scale=ic.get_scale())
+    with st.spinner("Preparing data for training"):
+        train_set, val_set = mc.prepare_train_n_val(noisy_im_list=ic.get_noisy_ims(), clean_im_list=ic.get_clean_ims(), scale=ic.get_scale())
     model_tuned, config = mc.run_finetuning(train_set, val_set)
 
     oc.set_model(model=model_tuned, config=config, infer_func=mc.run_inference, scale=ic.get_scale())

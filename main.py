@@ -40,7 +40,7 @@ if sst.page_num == 0:
     page_0()
 
 if sst.page_num == 0.5: # Extra page to flush out the screen
-    st.write("Setting up")
+    st.write("Config setup complete")
     st.write("Click \"Next\" to begin training")
 
 if sst.page_num == 1:
