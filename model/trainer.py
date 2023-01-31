@@ -36,8 +36,8 @@ def train(model, config, train_set, val_set):
     for idx, h in enumerate(config.height):
         train_loader.append(
             DataLoader(train_set[idx], shuffle=True, pin_memory=False, drop_last=True,
-                        batch_size=config.batch_size)#, num_workers=8, prefetch_factor=8, #os.cpu_count()//len(config.height) #TODO: calibrate on machine setup
-                        # persistent_workers=True)
+                        batch_size=config.batch_size, num_workers=16, prefetch_factor=16, #os.cpu_count()//len(config.height) #TODO: calibrate on machine setup
+                        persistent_workers=True)
             )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -140,8 +140,8 @@ def train(model, config, train_set, val_set):
 def run_val(model, config, val_set, placeholder_2, placeholder_3):
 
     #TODO: calibrate on machine setup
-    cutout = (8, 64, 64)
-    overlap = (2, 16, 16)
+    cutout = (16, 128, 128)
+    overlap = (4, 32, 32)
     batch_size = 4
 
     model.eval()
