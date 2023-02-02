@@ -10,7 +10,6 @@ Used to set up model configuration and get inputs
 """
 
 import math
-import datetime
 import streamlit as st
 
 from utils.utils import *
@@ -27,10 +26,13 @@ def page_0():
 
     model_list = mc.get_model_list()
 
-    model_name = st.selectbox("Select the model to use for fine tuning", model_list)
+    model_name = st.selectbox("Select the model to use for fine tuning", ["Select a Model", "Empty Model (Train from scratch)", *model_list])
+    if model_name == "Select a Model": st.stop()
     mc.set_model_path(model_name=model_name)
 
     config_update_dict = get_config_update()
+    if model_name == "Empty Model (Train from scratch)":
+        config_update_dict = make_complete_config(config_update_dict)
 
     noisy_images = st.file_uploader("Noisy Images", accept_multiple_files=True)
     clean_images = st.file_uploader("Clean Images", accept_multiple_files=True)
@@ -92,11 +94,7 @@ def get_config_update():
 
     def get_name():
 
-        now = datetime.datetime.now()
-        now = now.strftime("%m-%d-%Y_T%H-%M-%S")
-        config_update_dict["date"] = now
-
-        return st.text_input("Model Name", value=f"Model_{now}")
+        return st.text_input("Model Name", value=f"Model_{st.session_state.datetime}")
 
     def get_epoch():
 
@@ -157,11 +155,95 @@ def get_config_update():
     config_update_dict["time"], config_update_dict["height"], config_update_dict["width"] = get_cutout()
     config_update_dict["loss"] = get_loss()
     n_loss = len(config_update_dict["loss"])
+    config_update_dict["loss_weights"] = [1.0]
     if n_loss > 1 : config_update_dict["loss_weights"] = get_loss_weights(n_loss)
     config_update_dict["save_cycle"] = get_save_cycle()
     config_update_dict["num_samples_per_file"] = get_samples_per_image()
 
     return config_update_dict
+
+def make_complete_config(config):
+
+    def get_channels():
+
+        blocks = [16, 32, 64]
+
+        col1, col2, col3 = st.columns(3)
+        with col1: blocks[0] = st.number_input("Num channels for first layer", min_value=1, format="%d", value=16)
+        with col2: blocks[1] = st.number_input("Num channels for second layer", min_value=1, format="%d", value=32)
+        with col3: blocks[2] = st.number_input("Num channels for third layer", min_value=1, format="%d", value=64)
+
+        return blocks
+
+    def blocks_and_heads():
+
+        col1, col2 = st.columns(2)
+        with col1: b = st.number_input("Number of CNNT blocks per layer", min_value=1, format="%d", value=4)
+        with col2: h = st.number_input("Number of Transformer heads per block", min_value=1, format="%d", value=8)
+
+        return b, h
+
+    def conv_params():
+
+        col1, col2, col3 = st.columns(3)
+        with col1: k = st.number_input("Kernel size for each Conv", min_value=1, format="%d", value=3)
+        with col2: s = st.number_input("Stride for each Conv", min_value=1, format="%d", value=1)
+        with col3: p = st.number_input("Padding for each Conv", min_value=1, format="%d", value=1)
+
+        return k, p, s
+
+    def mixer_and_conv3D():
+
+        col1, col2 = st.columns(2)
+        with col1: m = 1 if st.checkbox("Use mixer (Conv after attention)?", value=True) else 0
+        with col2: c = st.checkbox("Use Conv3D instead of Conv2D?", value=False)
+
+        return m, c
+
+    def optim():
+
+        col1, col2, col3 = st.columns(3)
+        with col1: o = st.radio("Optimizer", ["adamw", "nadam", "sgd"])
+        with col2: s = st.radio("Scheduler", ["ReduceLROnPlateau", "StepLR"])
+        with col3: n = st.radio("Norm mode", ["instance", "layer", "batch"])
+
+        return o, s, n
+
+    def optim_params():
+
+        col1, col2 = st.columns(2)
+        with col1:
+            l = st.number_input("Global learning rate (Overwrites previous learning rate)", min_value=0.0, format="%f", value=0.0001)
+            d = st.number_input("Dropout probability", min_value=0.0, format="%f", value=0.1)
+            b = st.number_input("Optimizer beta 1", min_value=0.0, format="%f", value=0.90)
+        with col2:
+            w = st.number_input("Optimizer weight decay", min_value=0.0, format="%f", value=0.1)
+            g = st.number_input("Gradient norm clip", min_value=0.0, format="%f", value=1.0)
+            c = st.number_input("Optimizer beta 2", min_value=0.0, format="%f", value=0.95)
+            
+
+        return l, d, b, w, g, c
+        
+    def misc_1():
+
+        col1, col2, col3 = st.columns(3)
+        with col1: b = st.checkbox("Bias for Convs", value=False)
+        with col2: r = st.checkbox("No residual connection", value=False)
+        with col3: w = st.checkbox("No weight decay", value=False)
+
+        return b, r, w
+
+    config["blocks"] = get_channels()
+    config["blocks_per_set"], config["n_head"] = blocks_and_heads()
+    config["kernel_size"], config["stride"], config["padding"] = conv_params()
+    config["optim"], config["scheduler"], config["norm_mode"] = optim()
+    config["global_lr"], config["dropout_p"], config["beta1"], \
+    config["weight_decay"], config["clip_grad_norm"], config["beta2"] = optim_params()
+    config["with_mixer"], config["use_conv_3D"] = mixer_and_conv3D()
+    config["bias"], config["no_residual"], config["no_w_decay"] = misc_1()
+    config["dp"] = torch.cuda.device_count() > 1
+
+    return config
 
 def get_format_a(col, format_a):
     

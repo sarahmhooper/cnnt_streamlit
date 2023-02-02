@@ -4,6 +4,7 @@ Main file for the UI
 Keeps track of the pages and shares data in between
 """
 
+import datetime
 import streamlit as st
 
 from utils.utils import *
@@ -27,6 +28,11 @@ def init_session_state():
 
     if "outputs_class" not in st.session_state:
         st.session_state.outputs_class = Outputs_Class()
+
+    now = datetime.datetime.now()
+    now = now.strftime("%m-%d-%Y_T%H-%M-%S")
+    if "datetime" not in st.session_state:
+        st.session_state.datetime = now
 
 init_session_state()
 

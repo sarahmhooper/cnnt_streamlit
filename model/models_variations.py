@@ -41,6 +41,16 @@ def load_true_model(model_path, config_update_dict):
 
     return model, config
 
+def create_true_model(config):
+    # Create a new model given config
+
+    config = Namespace(**config)
+
+    config.load_path = None
+    model = CNNT_enhanced_denoising_runtime(config=config)
+
+    return model, config
+
 def filter_f(model_path_dir):
     # filter function for model types
     
@@ -67,6 +77,8 @@ def load_model(model_path, config_update_dict):
     file_ext = pathlib.Path(model_path).suffix.lower()
     if file_ext == ".pt":
         model, config = load_true_model(model_path, config_update_dict)
+    elif os.path.basename(model_path) == "Empty Model (Train from scratch)":
+        model, config = create_true_model(config_update_dict)
     else:
         raise FileTypeNotSupported(f"Model type in not supported:{file_ext}")
 

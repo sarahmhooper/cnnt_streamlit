@@ -454,7 +454,7 @@ class CNNT_base_model_runtime(nn.Module):
             #                                                     three_phase=False,
             #                                                     last_epoch=-1)
 
-                self.scheduler_on_batch = True
+            #     self.scheduler_on_batch = True
         else:
             # Used for testing/plotting
             pass
@@ -504,7 +504,7 @@ class CNNT_base_model_runtime(nn.Module):
 
         return optimizer
 
-    def set_up_loss(self, loss, loss_weights, loss_args, device='cpu'):
+    def set_up_loss(self, loss, loss_weights, loss_args=[0,0,0,0,0], device='cpu'):
 
         loss_f = Image_Enhancement_Combined_Loss()
         for ind, l in enumerate(loss):
@@ -567,8 +567,6 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
 
         self.no_residual = config.no_residual
 
-        assert config.data_type == "ct" or config.data_type == "micro"
-
         C_in = 1
         C_out = 1
 
@@ -596,9 +594,9 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # setup loss function and optimizer
-        self.loss_f = self.set_up_loss(config.loss, config.loss_weights, config.loss_args, device=device)
+        self.loss_f = self.set_up_loss(config.loss, config.loss_weights, device=device)
 
-        self.loss_f_test = self.set_up_loss(config.loss, config.loss_weights, config.loss_args, device='cpu')
+        self.loss_f_test = self.set_up_loss(config.loss, config.loss_weights, device='cpu')
 
         self.set_up_scheduling()
 
