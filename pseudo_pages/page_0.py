@@ -142,6 +142,10 @@ def get_config_update():
     def get_save_cycle():
 
         return st.number_input("Save Cycle (Epochs between each model save and image show)", min_value=1, format="%d", value=5)
+
+    def get_samples_per_image():
+
+        return st.number_input("Number of train samples per image", min_value=1, format="%d", value=8)
     
     config_update_dict["model_file_name"] = get_name()
 
@@ -155,6 +159,7 @@ def get_config_update():
     n_loss = len(config_update_dict["loss"])
     if n_loss > 1 : config_update_dict["loss_weights"] = get_loss_weights(n_loss)
     config_update_dict["save_cycle"] = get_save_cycle()
+    config_update_dict["num_samples_per_file"] = get_samples_per_image()
 
     return config_update_dict
 

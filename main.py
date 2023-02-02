@@ -50,5 +50,5 @@ if sst.page_num == 2 or sst.page_num == 1.5: # 1.5 because incrementing with 0.5
     page_2()
 
 # Render buttons at the bottom of the page to prevent early render
-st.button("Next",on_click=nextpage,disabled=(sst.page_num >= 2))
+st.button("Next",on_click=nextpage,disabled=(sst.page_num >= 1.5))
 st.button("Restart",on_click=restart,disabled=(sst.page_num == 0))

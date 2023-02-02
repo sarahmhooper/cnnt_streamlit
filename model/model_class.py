@@ -70,7 +70,7 @@ class Model_Class():
         for h, w in zip(self.config.height, self.config.width):
             train_set.append(MicroscopyDataset(noisy_im_list=noisy_im_list, clean_im_list=clean_im_list,
                                                 scale=scale, cutout_shape=(self.config.time, h, w),
-                                                num_samples_per_file=8)
+                                                num_samples_per_file=self.config.num_samples_per_file)
             )
 
         indices = list(range(len(noisy_im_list)))

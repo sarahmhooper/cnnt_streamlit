@@ -35,8 +35,8 @@ def train(model, config, train_set, val_set):
     train_loader = []
     for idx, h in enumerate(config.height):
         train_loader.append(
-            DataLoader(train_set[idx], shuffle=True, pin_memory=False, drop_last=True,
-                        batch_size=config.batch_size, num_workers=16, prefetch_factor=16, #os.cpu_count()//len(config.height) #TODO: calibrate on machine setup
+            DataLoader(train_set[idx], shuffle=True, pin_memory=False, drop_last=False,
+                        batch_size=config.batch_size, num_workers=8, prefetch_factor=16, #os.cpu_count()//len(config.height) #TODO: calibrate on machine setup
                         persistent_workers=True)
             )
 
