@@ -44,11 +44,14 @@ class Model_Class():
 
         return filter_f(self.model_path_dir)
 
-    def set_model_path(self, model_name):
+    def set_model_path(self, model_name, model_files):
         # Given model name, set the model path. Load later
-
-        model_path = os.path.join(self.model_path_dir, model_name)
-        self.model_path = model_path
+        if model_files == []:
+            model_path = os.path.join(self.model_path_dir, model_name)
+            self.model_path = model_path
+        else:
+            self.model_files = model_files
+            self.model_path = None
 
     def set_config_update_dict(self, config_update_dict):
         # Save the config update to setup the model later
@@ -60,7 +63,7 @@ class Model_Class():
     def load_model(self):
         # Load model before inference
 
-        self.model, self.config = load_model(model_path=self.model_path, config_update_dict=self.config_update_dict)
+        self.model, self.config = load_model(model_path=self.model_path, model_files=self.model_files, config_update_dict=self.config_update_dict)
 
     def prepare_train_n_val(self, noisy_im_list, clean_im_list, scale):
         # Prepare train and val sets

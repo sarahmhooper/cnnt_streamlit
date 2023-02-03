@@ -69,8 +69,8 @@ def filter_f(model_path_dir):
 
 ###################################################################################################
 
-# One funtion to read all different types of models
-def load_model(model_path, config_update_dict):
+# One funtion to read all different types of models from local paths
+def load_model_path(model_path, config_update_dict):
 
     st.write(f"Loading model: {os.path.basename(model_path)}")
 
@@ -83,3 +83,35 @@ def load_model(model_path, config_update_dict):
         raise FileTypeNotSupported(f"Model type in not supported:{file_ext}")
 
     return model, config
+
+# One funtion to read all different types of models from uploaded files
+def load_model_file(model_files, config_update_dict):
+
+    pt_f, json_f = (model_files[0], model_files[1]) if model_files[0].name.endswith(".pt") \
+        and model_files[1].name.endswith(".json") else (model_files[1], model_files[0])
+
+    st.write(f"Loading model: {pt_f.name}")
+
+    config = json.load(json_f)
+    
+    for key in config_update_dict:
+        config[key] = config_update_dict[key]
+    config["dp"] = torch.cuda.is_available() and torch.cuda.device_count() > 1
+
+    config = Namespace(**config)
+
+    config.load_path = pt_f
+    model = CNNT_enhanced_denoising_runtime(config=config)
+
+    return model, config
+
+###################################################################################################
+
+# Wrapper around local vs uploaded models
+
+def load_model(model_path, model_files, config_update_dict):
+
+    if model_path != None:
+        return load_model_path(model_path=model_path, config_update_dict=config_update_dict)
+    else:
+        return load_model_file(model_files=model_files, config_update_dict=config_update_dict)
