@@ -48,6 +48,7 @@ class Model_Class():
         # Given model name, set the model path. Load later
         if model_files == []:
             model_path = os.path.join(self.model_path_dir, model_name)
+            self.model_files = []
             self.model_path = model_path
         else:
             self.model_files = model_files
