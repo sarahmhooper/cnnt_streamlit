@@ -46,7 +46,18 @@ class Inputs_Class():
 
         assert(self.noisy_format_a == self.clean_format_a)
         assert(self.noisy_format_d == self.clean_format_d)
+        assert(len(self.noisy_im_list)==len(self.noisy_im_names)==len(self.clean_im_list)==len(self.clean_im_names))
         # TODO: more checks
+
+        def sort_by_name(names, images):
+
+            test = list(zip(names, images))
+            test.sort(key=lambda a : a[0])
+
+            return ([i for i,j in test], [j for i, j in test])
+
+        self.noisy_im_names, self.noisy_im_list = sort_by_name(self.noisy_im_names, self.noisy_im_list)
+        self.clean_im_names, self.clean_im_list = sort_by_name(self.clean_im_names, self.clean_im_list)
 
         self.format_a = self.clean_format_a
         self.format_d = self.clean_format_d
