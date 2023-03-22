@@ -14,7 +14,7 @@ from outputs.outputs_class import Outputs_Class
 def init_session_state():
     # Initializes the classes and page number
 
-    model_path_dir = arg_parse_model_path_dir()
+    args = arg_parse()
 
     if "page_num" not in st.session_state:
         st.session_state.page_num = 0
@@ -23,7 +23,7 @@ def init_session_state():
         st.session_state.inputs_class = Inputs_Class()
 
     if "model_class" not in st.session_state:
-        st.session_state.model_class = Model_Class(model_path_dir=model_path_dir)
+        st.session_state.model_class = Model_Class(args=args)
 
     if "outputs_class" not in st.session_state:
         st.session_state.outputs_class = Outputs_Class()

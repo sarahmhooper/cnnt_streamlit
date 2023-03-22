@@ -21,14 +21,17 @@ class Model_Class():
     Provides method to run inference using the model
     """
 
-    def __init__(self, model_path_dir):
+    def __init__(self, args):
         # only save path_dir given when starting the streamlit server
 
         self.model = None
         self.config = None
         self.model_path = None
 
-        self.model_path_dir = model_path_dir
+        self.device = args.device
+        self.cutout = args.cutout
+        self.overlap = args.overlap
+        self.model_path_dir = args.model_path_dir
 
     def get_model_list(self):
         # Retrieve the possible models from given model path directory
@@ -54,6 +57,6 @@ class Model_Class():
         # Run inference on loaded model and given images
         # cut_np_images: 3D numpy images of axis order: THW
 
-        clean_pred_list = running_inference(self.model, cut_np_images)
+        clean_pred_list = running_inference(self.model, cut_np_images, self.cutout, self.overlap, self.device)
 
         return cut_np_images, clean_pred_list
