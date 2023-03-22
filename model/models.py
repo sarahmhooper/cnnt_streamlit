@@ -591,7 +591,7 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
             Conv2DExt(16, C_out, kernel_size=K, stride=S, padding=P, bias=True)
         )
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = config.device
 
         # setup loss function and optimizer
         self.loss_f = self.set_up_loss(config.loss, config.loss_weights, device=device)

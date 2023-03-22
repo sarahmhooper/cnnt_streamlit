@@ -66,6 +66,7 @@ class Model_Class():
         config_update_dict["model_path_dir"] = self.model_path_dir
         config_update_dict["check_path"] = self.check_path
         config_update_dict["dp"] = self.device == "cuda" and torch.cuda.device_count() > 1
+        config_update_dict["device"] = self.device
         self.config_update_dict = config_update_dict
 
     def load_model(self):
