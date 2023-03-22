@@ -154,6 +154,27 @@ def infer_format_d(image):
 
 ###################################################################################################
 
+# Sort lists so one to one mapping
+
+def sort_list(images, names):
+    """
+    Sorting images by name. zips, sorts, unzips
+    @args:
+        - images: the list of images
+        - names: the list of names
+    @returns:
+        - sorted_images: the sorted list of images
+        - sorted_names: the sorted list of names
+    """
+    sorted_l = sorted(zip(names, images), key=lambda x:x[0])
+
+    sorted_images = [x[1] for x in sorted_l]
+    sorted_names = [x[0] for x in sorted_l]
+
+    return sorted_images, sorted_names
+
+###################################################################################################
+
 # One function to read all different input types
 
 def read_inputs(input_list_raw):
@@ -182,6 +203,8 @@ def read_inputs(input_list_raw):
             noisy_im_list, noisy_im_names = read_lifs(input_list, noisy_im_names)
         else:
             raise FileTypeNotSupported(f"File type input not supported:{file_ext}")
+        
+        noisy_im_list, noisy_im_names = sort_list(noisy_im_list, noisy_im_names)
 
     return noisy_im_names, noisy_im_list, infer_format_a(noisy_im_list[0]), infer_format_d(noisy_im_list[0])
 
