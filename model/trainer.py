@@ -83,7 +83,7 @@ def train(model, config, train_set, val_set, device, num_workers, prefetch_facto
 
         for i, idx in enumerate(indices):
             loader_ind = idx % len(config.height)
-            x, y = train_loader_iter[loader_ind].next()
+            x, y = next(train_loader_iter[loader_ind])
 
             x = x.to(device)
             y = y.to(device)
