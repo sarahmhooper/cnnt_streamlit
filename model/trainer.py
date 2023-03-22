@@ -16,7 +16,7 @@ import streamlit as st
 
 ###################################################################################################
 
-def train(model, config, train_set, val_set):
+def train(model, config, train_set, val_set, device, num_workers, prefetch_factor):
     """
     Main function for training/finetuning loop
     @args:
@@ -24,6 +24,9 @@ def train(model, config, train_set, val_set):
         - config: a namespace holding the configuration
         - train_set: pytorch dataset
         - val_set: list of np images similar to noisy images
+        - device: device to train on
+        - num_workers: worker for dataloader
+        - prefetch_factor: prefetching for dataloader
     @returns:
         - model: the trained model
         - config: updated?
@@ -36,12 +39,11 @@ def train(model, config, train_set, val_set):
     for idx, h in enumerate(config.height):
         train_loader.append(
             DataLoader(train_set[idx], shuffle=True, pin_memory=False, drop_last=False,
-                        batch_size=config.batch_size, num_workers=8, prefetch_factor=16, #os.cpu_count()//len(config.height) #TODO: calibrate on machine setup
-                        persistent_workers=True)
+                        batch_size=config.batch_size, num_workers=num_workers,
+                        prefetch_factor=prefetch_factor, persistent_workers=num_workers>0)
             )
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if config.dp:
+    if config.dp and device=="cuda":
         model = torch.nn.DataParallel(model)
 
     model.to(device)
@@ -119,7 +121,7 @@ def train(model, config, train_set, val_set):
 
         if epoch % config.save_cycle == 0:
             torch.cuda.empty_cache()
-            val_loss, val_ssim3D_loss, val_psnr_val = run_val(model, config, val_set, placeholder_2, placeholder_3)
+            val_loss, val_ssim3D_loss, val_psnr_val = run_val(model, config, val_set, device, placeholder_2, placeholder_3)
             torch.cuda.empty_cache()
             model.module.save(epoch) if config.dp else model.save(epoch)
 
@@ -137,7 +139,7 @@ def train(model, config, train_set, val_set):
 
 ###################################################################################################
 # Run inference for val image
-def run_val(model, config, val_set, placeholder_2, placeholder_3):
+def run_val(model, config, val_set, device, placeholder_2, placeholder_3):
 
     #TODO: calibrate on machine setup
     cutout = (16, 128, 128)
@@ -145,7 +147,6 @@ def run_val(model, config, val_set, placeholder_2, placeholder_3):
     batch_size = 4
 
     model.eval()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     noisy_image, clean_image = val_set[0].to(device), val_set[1].to(device)
 

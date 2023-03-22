@@ -28,7 +28,7 @@ class Model_Class():
     Provides method to finetune the model
     """
 
-    def __init__(self, model_path_dir, check_path):
+    def __init__(self, args):
         # save path_dir given when starting the streamlit server
         # save check_path for saving checkpoints
 
@@ -36,8 +36,13 @@ class Model_Class():
         self.config = None
         self.model_path = None
 
-        self.model_path_dir = model_path_dir
-        self.check_path = check_path
+        self.device = args.device
+        self.cutout = args.cutout
+        self.overlap = args.overlap
+        self.model_path_dir = args.model_path_dir
+        self.check_path = args.check_path
+        self.num_workers = args.num_workers
+        self.prefetch_factor = args.prefetch_factor
 
     def get_model_list(self):
         # Retrieve the possible models from given model path directory
@@ -94,12 +99,12 @@ class Model_Class():
         # Run inference on loaded model and given images
         # cut_np_images: 3D numpy images of axis order: THW
 
-        return running_inference(self.model, noisy_image)
+        return running_inference(self.model, noisy_image, self.cutout, self.overlap, self.device)
 
     def run_finetuning(self, train_set, val_set):
         # Run the finetuning cycle and update the model and config
         
-        model, config = train(self.model, self.config, train_set, val_set)
+        model, config = train(self.model, self.config, train_set, val_set, self.device, self.num_workers, self.prefetch_factor)
         self.model = model
         self.config = config
 

@@ -136,19 +136,19 @@ def running_inference_per_image(model, image,
 
 ###################################################################################################
 
-def running_inference(model, cut_np_images):
+def running_inference(model, cut_np_images, cutout, overlap, device):
     """
     Wrapper for actual inference function
     Runs inference on cut_np_images on the given model
     @inputs:
         - model: loaded pytorch model
         - cut_np_images: the np_images to be inferred of axis order THW
+        - cutout: cutout for inference
+        - overlap: overlap for inference
+        - device: device to run on
     """
 
     image_list = [x.astype(np.float32) for x in cut_np_images]
-    #TODO: calibrate on machine setup
-    cutout = (8, 64, 64)
-    overlap = (2, 16, 16)
     batch_size = 4
 
     num_images = len(image_list)
@@ -172,14 +172,14 @@ def running_inference(model, cut_np_images):
         try:
             start = time.time()
             with placeholder_1.container():
-                st.write(f"Running Image {i}/{num_images} on GPU")
+                st.write(f"Running Image {i}/{num_images} on {device}")
                 st.write(f"Current Image Progress:")
-            clean_pred, _ = running_inference_per_image(model, image, cutout, overlap, batch_size, device="cuda", placeholder=placeholder_2)
+            clean_pred, _ = running_inference_per_image(model, image, cutout, overlap, batch_size, device=device, placeholder=placeholder_2)
             torch.cuda.empty_cache()
         except:
             start = time.time()
             with placeholder_1.container():
-                st.write(f"Failed on GPU, Running Image {i}/{num_images} on CPU")
+                st.write(f"Failed on {device}, Running Image {i}/{num_images} on CPU")
                 st.write(f"Current Image Progress:")
             clean_pred, _ = running_inference_per_image(model, image, cutout, overlap, batch_size, device="cpu", placeholder=placeholder_2)
 

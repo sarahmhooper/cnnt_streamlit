@@ -16,7 +16,7 @@ def reset_session_state():
     for key in st.session_state.keys():
         del st.session_state[key]
 
-def arg_parse_model_path_dir():
+def arg_parse():
     """
     Parses the command line arg of model path directory
     """
@@ -24,8 +24,14 @@ def arg_parse_model_path_dir():
     parser = argparse.ArgumentParser("Argument parser for CNNT_Streamlit Inference UI")
     parser.add_argument("--model_path_dir", type=str, default=None, help='The folder containing models')
     parser.add_argument("--check_path", type=str, default=None, help='The folder for temporary model weight saves')
+    parser.add_argument("--cutout", nargs="+", type=int, default=[8,64,64], help='cutout for inference')
+    parser.add_argument("--overlap", nargs="+", type=int, default=[2,16,16], help='overlap for inference')
+    parser.add_argument("--device", type=str, default="cuda", help='the device to run on')
+    parser.add_argument("--num_workers", type=int, default=0, help='worker for dataloader')
+    parser.add_argument("--prefetch_factor", type=int, default=2, help='prefetching for dataloader')
     args = parser.parse_args()
-    return args.model_path_dir, args.check_path
+
+    return args
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
