@@ -247,7 +247,6 @@ def make_complete_config(config):
     config["weight_decay"], config["clip_grad_norm"], config["beta2"] = optim_params()
     config["with_mixer"], config["use_conv_3D"] = mixer_and_conv3D()
     config["bias"], config["no_residual"], config["no_w_decay"] = misc_1()
-    config["dp"] = torch.cuda.device_count() > 1
 
     return config
 

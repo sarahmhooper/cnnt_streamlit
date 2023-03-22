@@ -32,7 +32,6 @@ def load_true_model(model_path, config_update_dict):
 
     for key in config_update_dict:
         config[key] = config_update_dict[key]
-    config["dp"] = torch.cuda.is_available() and torch.cuda.device_count() > 1
 
     config = Namespace(**config)
 
@@ -96,7 +95,6 @@ def load_model_file(model_files, config_update_dict):
     
     for key in config_update_dict:
         config[key] = config_update_dict[key]
-    config["dp"] = torch.cuda.is_available() and torch.cuda.device_count() > 1
 
     config = Namespace(**config)
 

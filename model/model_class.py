@@ -7,6 +7,7 @@ Hold items related to the model:
 - config
 """
 import os
+import torch
 import random
 import numpy as np
 
@@ -64,6 +65,7 @@ class Model_Class():
 
         config_update_dict["model_path_dir"] = self.model_path_dir
         config_update_dict["check_path"] = self.check_path
+        config_update_dict["dp"] = self.device == "cuda" and torch.cuda.device_count() > 1
         self.config_update_dict = config_update_dict
 
     def load_model(self):
