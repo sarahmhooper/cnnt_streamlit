@@ -60,9 +60,9 @@ def filter_f(model_path_dir):
             - True or False depending on whether the model type is supported
         """
         file_ext = pathlib.Path(x).suffix.lower()
-        return file_ext in [".pt", ".pts"]
+        return file_ext in [".pt"]
 
-    return filter(filter_fx, os.listdir(model_path_dir))
+    return sorted(filter(filter_fx, os.listdir(model_path_dir)))
 
 ###################################################################################################
 
