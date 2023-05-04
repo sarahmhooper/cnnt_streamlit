@@ -4,6 +4,7 @@ Main file for the UI
 Keeps track of the pages and shares data in between
 """
 
+import datetime
 import streamlit as st
 
 from utils.utils import *
@@ -28,27 +29,32 @@ def init_session_state():
     if "outputs_class" not in st.session_state:
         st.session_state.outputs_class = Outputs_Class()
 
+    now = datetime.datetime.now()
+    now = now.strftime("%m-%d-%Y_T%H-%M-%S")
+    if "datetime" not in st.session_state:
+        st.session_state.datetime = now
+
 init_session_state()
 
 from pseudo_pages.page_0 import page_0
 from pseudo_pages.page_1 import page_1
 from pseudo_pages.page_2 import page_2
 
-placeholder = st.empty()
 sst = st.session_state
 
 if sst.page_num == 0:
+    page_0()
 
-    page_0(placeholder)
+if sst.page_num == 0.5: # Extra page to flush out the screen
+    st.write("Config setup complete")
+    st.write("Click \"Next\" to begin training")
 
 if sst.page_num == 1:
-   
-    page_1(placeholder)
+    page_1()
 
-if sst.page_num == 2:
-    
-    page_2(placeholder)
+if sst.page_num == 2 or sst.page_num == 1.5: # 1.5 because incrementing with 0.5
+    page_2()
 
 # Render buttons at the bottom of the page to prevent early render
-st.button("Next",on_click=nextpage,disabled=(sst.page_num >= 2))
+st.button("Next",on_click=nextpage,disabled=(sst.page_num >= 1.5))
 st.button("Restart",on_click=restart,disabled=(sst.page_num == 0))

@@ -14,7 +14,7 @@ def scale_and_clip(image, min, max):
     return np.clip(image, 0, 1)
 
 
-def plot_image(image, col):
+def plot_image(image, col, key):
     # Given image and column plot the image and give the ability to change clip values
 
     with col:
@@ -22,19 +22,20 @@ def plot_image(image, col):
         min_l : float = np.min(image).item()
         max_l : float = np.max(image).item()
 
-        min_l, max_l = st.slider("Image Clip Values", min_value=min_l, max_value=max_l, value=(min_l, max_l), step=0.0001)
+        min_l, max_l = st.slider("Image Clip Values", min_value=min_l, max_value=max_l, value=(min_l, max_l), step=0.0001, key=f"{key}_slider")
 
-        st.image(scale_and_clip(image, min_l, max_l))
+        st.image(scale_and_clip(image, min_l, max_l), caption=key)
 
 
-def plot_pair(name, noisy, cpred):
+def plot_three(name, noisy, cpred, clean):
     # plot the given image pair
 
     st.write(f"Plotting Image {name}")
     image_frame = st.slider("Frame to Display", min_value=0, max_value=noisy.shape[0]-1 if not noisy.shape[0]==1 else 1, disabled=noisy.shape[0]==1)
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
-    plot_image(noisy[image_frame], col1)
-    plot_image(cpred[image_frame], col2)
+    plot_image(noisy[image_frame], col1, "Noisy")
+    plot_image(cpred[image_frame], col2, "Predicted")
+    plot_image(clean[image_frame], col3, "Clean")
 
