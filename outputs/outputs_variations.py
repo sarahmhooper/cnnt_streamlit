@@ -10,6 +10,7 @@ Currently support downloading individual/all(.zip) as:
 """
 
 import io
+import pathlib
 import zipfile
 import tifffile
 import numpy as np
@@ -37,7 +38,7 @@ def write_tiff_zip(image_list, names_list):
         for i, image in enumerate(image_list):
             temp_buff = io.BytesIO()
             tifffile.imwrite(temp_buff, image)
-            myzip.writestr(names_list[i], temp_buff.getvalue())
+            myzip.writestr(f"{names_list[i]}_predicted.tiff", temp_buff.getvalue())
 
     return final_buffer
 
@@ -55,7 +56,7 @@ def download_files(file_list, file_names, format):
     st.download_button(
         label="Download Predicted Clean Image(s)",
         data = final_buffer, # Download buffer
-        file_name = f'{file_names[0]}' if d_one else 'Pred_Clean.zip' 
+        file_name = f'{file_names[0]}_predicted.tiff' if d_one else 'Pred_Clean.zip' 
     )
 
 ###################################################################################################

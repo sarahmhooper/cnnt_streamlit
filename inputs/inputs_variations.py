@@ -99,11 +99,14 @@ def read_lifs(input_list, lif_names):
     """
     file_list = [LifFile(x) for x in input_list]
 
+    noisy_im_list = []
+    noisy_im_names = []
+
     for i, file in enumerate(file_list):
         
         tuple_list = [iter_c(image, f"{lif_names[i]}/{image.name}_") for image in file.get_iter_image()]
-        noisy_im_list = flatten([x[0] for x in tuple_list])
-        noisy_im_names = flatten([x[1] for x in tuple_list])
+        noisy_im_list.extend(flatten([x[0] for x in tuple_list]))
+        noisy_im_names.extend(flatten([x[1] for x in tuple_list]))
 
     return noisy_im_list, noisy_im_names
 
