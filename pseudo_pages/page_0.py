@@ -39,6 +39,15 @@ def page_0():
     config_update_dict = get_config_update()
     if model_name == "Empty Model (Train from scratch)":
         config_update_dict = make_complete_config(config_update_dict)
+        model_name = st.selectbox("Select the model to use for inference", ["Select a Model", "Upload a Model", *model_list])
+
+        model_files = []
+        if model_name == "Select a Model":
+            st.stop()
+        elif model_name == "Upload a Model":
+            model_files = get_model()
+
+        mc.set_model_path(model_name=model_name, model_files=model_files)
 
     noisy_images = st.file_uploader("Noisy Images", accept_multiple_files=True)
     clean_images = st.file_uploader("Clean Images", accept_multiple_files=True)
@@ -293,6 +302,11 @@ def get_model():
 
     if files == []: st.stop()
 
+    files = st.file_uploader("Upload Model (.pts or .pt+.json)", accept_multiple_files=True)
+
+    if files == []: st.stop()
+
+    if files[0].name.endswith(".pts"): return files
     if files[0].name.endswith(".pt") and files[1].name.endswith(".json") or \
        files[1].name.endswith(".pt") and files[0].name.endswith(".json"): return files
     

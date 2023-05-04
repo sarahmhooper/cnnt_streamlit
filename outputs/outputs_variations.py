@@ -49,6 +49,10 @@ def write_pt_and_json(model, config):
     final_buffer = io.BytesIO()
 
     with zipfile.ZipFile(final_buffer, "w") as myzip:
+        for i, image in enumerate(image_list):
+            temp_buff = io.BytesIO()
+            tifffile.imwrite(temp_buff, image)
+            myzip.writestr(f"{names_list[i]}_predicted.tiff", temp_buff.getvalue())
 
         temp_buff = io.BytesIO()
         torch.save(model.state_dict(), temp_buff)
@@ -75,4 +79,5 @@ def download_files(model, config, format):
         label="Download Model",
         data = final_buffer, # Download buffer
         file_name = file_name
+        file_name = f'{file_names[0]}_predicted.tiff' if d_one else 'Pred_Clean.zip' 
     )
