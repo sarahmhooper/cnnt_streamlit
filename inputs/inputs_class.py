@@ -30,13 +30,9 @@ class Inputs_Class():
     """
 
     def __init__(self):
-        # Init with empties
+        # Init with empty
 
-        self.noisy_im_list = []
-        self.noisy_im_names = []
-        self.clean_im_list = []
-        self.clean_im_names = []
-        self.scale = 1
+        self.images = {}
 
     def read_inputs_files(self, noisy_list_raw, clean_list_raw):
         # Read noisy and clean using the one function
