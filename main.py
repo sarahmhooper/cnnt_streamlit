@@ -34,6 +34,10 @@ def init_session_state():
     if "datetime" not in st.session_state:
         st.session_state.datetime = now
 
+def nextpage(): st.session_state.page_num += 0.5
+def prevpage(): st.session_state.page_num -= 1
+def restart(): reset_session_state(); init_session_state()
+
 init_session_state()
 
 from pseudo_pages.page_0 import page_0

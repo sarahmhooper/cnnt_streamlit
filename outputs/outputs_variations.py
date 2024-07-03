@@ -78,6 +78,5 @@ def download_files(model, config, format):
     st.download_button(
         label="Download Model",
         data = final_buffer, # Download buffer
-        file_name = file_name
         file_name = f'{file_names[0]}_predicted.tiff' if d_one else 'Pred_Clean.zip' 
     )

@@ -55,14 +55,14 @@ def filter_f(model_path_dir):
     
     def filter_fx(x):
         """
-        Given a file name return True of False if the type is supported for loading: .pt format
+        Given a file name return True of False if the type is supported for loading: .pth format
         @inputs:
             - x : the filename
         @ returnL
             - True or False depending on whether the model type is supported
         """
         file_ext = pathlib.Path(x).suffix.lower()
-        return file_ext in [".pt"]
+        return file_ext in [".pth"]
 
     return sorted(filter(filter_fx, os.listdir(model_path_dir)))
 

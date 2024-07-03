@@ -130,3 +130,5 @@ dmypy.json
 
 # tmp folder for saving videos
 tmp/
+# folder for env
+st_env/
