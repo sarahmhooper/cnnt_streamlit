@@ -12,13 +12,14 @@ import random
 import numpy as np
 
 from model.models_variations import load_model
-from model.models_variations import filter_f
+from model.models_variations import model_list_from_dir
 from model.running_inference import running_inference
 from model.microscopy_dataset import MicroscopyDataset
 
 from utils.utils import *
 from model.trainer import train
 
+# -------------------------------------------------------------------------------------------------
 
 class Model_Class():
     """
@@ -41,14 +42,14 @@ class Model_Class():
         self.cutout = args.cutout
         self.overlap = args.overlap
         self.model_path_dir = args.model_path_dir
-        self.check_path = args.check_path
+        # self.check_path = args.check_path
         self.num_workers = args.num_workers
         self.prefetch_factor = args.prefetch_factor
 
     def get_model_list(self):
         # Retrieve the possible models from given model path directory
 
-        return filter_f(self.model_path_dir)
+        return model_list_from_dir(self.model_path_dir)
 
     def set_model_path(self, model_name, model_files):
         # Given model name, set the model path. Load later
@@ -69,10 +70,14 @@ class Model_Class():
         config_update_dict["device"] = self.device
         self.config_update_dict = config_update_dict
 
-    def load_model(self):
+    def load_model(self, is_inf=True):
         # Load model before inference
 
-        self.model, self.config = load_model(model_path=self.model_path, model_files=self.model_files, config_update_dict=self.config_update_dict)
+        self.model, self.config = load_model(model_path=self.model_path, model_files=self.model_files, config_update_dict={}, device=self.device)
+
+    def is_model_loaded(self):
+
+        return self.model is not None
 
     def prepare_train_n_val(self, noisy_im_list, clean_im_list, scale):
         # Prepare train and val sets

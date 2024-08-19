@@ -8,13 +8,13 @@ import torch
 import numpy as np
 
 from utils.utils import *
-from model.models import *
+from model.model_cnnt import *
 from torch.utils.data.dataloader import DataLoader
 from model.running_inference import running_inference_per_image
 
 import streamlit as st
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 
 def train(model, config, train_set, val_set, device, num_workers, prefetch_factor):
     """
@@ -137,7 +137,7 @@ def train(model, config, train_set, val_set, device, num_workers, prefetch_facto
 
     return model, config
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 # Run inference for val image
 def run_val(model, config, val_set, device, placeholder_2, placeholder_3):
 
@@ -174,7 +174,7 @@ def run_val(model, config, val_set, device, placeholder_2, placeholder_3):
 
     return loss, ssim3D_loss, psnr_val
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 # Save the model as .pt as .pts in save dir set at start
 
 def save_cnnt_model(model, config, last="", height=64, width=64):
@@ -203,7 +203,7 @@ def save_cnnt_model(model, config, last="", height=64, width=64):
 
     return model_file_name
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 # Show middle frames during train cycle
 
 def show_image_frames(noisy, predi, clean, placeholder):

@@ -5,23 +5,26 @@ A novel structure that combines the ideas behind CNNs and Transformers
 CNNT is able to utilize the temporal correlation while keeping the computations efficient
 
 At runtime a config dictionary is required to create the model
-
 """
 
 import os
 import sys
 import math
-from pathlib import Path
 import numpy as np
+from math import exp
+from pathlib import Path
 
 Project_DIR = Path(__file__).parents[0].resolve()
 sys.path.insert(1, str(Project_DIR))
 
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
 import torch.optim as optim
-import torch.onnx
+from torch.autograd import Variable
+from torch.nn import functional as F
+
+# -------------------------------------------------------------------------------------------------
+# Helpers
 
 def compute_conv_output_shape(h_w, kernel_size, stride, pad, dilation):
     """
@@ -55,16 +58,14 @@ class Conv3DExt(nn.Module):
         y = self.conv3d(torch.permute(input, (0, 2, 1, 3, 4)))
         return torch.permute(y, (0, 2, 1, 3, 4))
     
-###################################################################################################
-
+# -------------------------------------------------------------------------------------------------
 # The CNN transformer to process the [B, T, C, H, W], a series of images
 
-###################################################################################################
 class CnnSelfAttention(nn.Module):
     """
     Multi-head cnn attention model    
     """
-
+    
     def __init__(self, H, W, C=1, T=32, output_channels=16, is_causal=False, n_head=8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), dropout_p=0.1):
         """Define the layers for a cnn self-attention
 
@@ -157,8 +158,7 @@ class CnnTransformer(nn.Module):
     The Pre-LayerNorm implementation is used here:
     
     x-> LayerNorm -> attention -> + -> LayerNorm -> CNN mixer -> + -> logits
-    |-----------------------------| |-------------------------------|
-    
+    |-----------------------------| |-------------------------------|  
     """
 
     def __init__(self, H, W, C=1, T=32, 
@@ -228,7 +228,6 @@ class CnnTransformer(nn.Module):
 
         return x
 
-
 class BlockSet(nn.Module):
     """
     A set of CNNT blocks
@@ -277,7 +276,6 @@ class BlockSet(nn.Module):
         # self.interpolate=="none"
 
         return x, interp
-
 
 class CNNTUnet(nn.Module):
     """
@@ -396,7 +394,7 @@ class CNNTUnet(nn.Module):
 
         return output
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 
 class CNNT_base_model_runtime(nn.Module):
     """CNNT base model for image enhancement
@@ -545,7 +543,7 @@ class CNNT_base_model_runtime(nn.Module):
             device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.load_state_dict(torch.load(load_path, map_location=device))
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 
 class Batch_perm(torch.nn.Module):
     def forward(self, x):
@@ -604,7 +602,6 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
         if config.load_path != None:
             self.load(config.load_path)
 
-
     def forward(self, x):
         # Pass the input to CNNT and work with the output
 
@@ -627,7 +624,7 @@ class CNNT_enhanced_denoising_runtime(CNNT_base_model_runtime):
         loss = self.loss_f_test(output, targets, weights, inputs, epoch)
         return loss
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 # All different types of losses
 
 class Sobel(nn.Module):
@@ -837,7 +834,7 @@ class PSNR:
 
         return -4.342944819 * torch.log(torch.mean(torch.square(targets - outputs)))
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 
 class Image_Enhancement_Combined_Loss:
     """Combined loss for image enhancement
@@ -873,19 +870,8 @@ class Image_Enhancement_Combined_Loss:
 
         return content
 
-
-###################################################################################################
-
-"""
-A pytorch SSIM and SSIM 3D implementation
-"""
-
-
-import torch
-import torch.nn.functional as F
-from torch.autograd import Variable
-import numpy as np
-from math import exp
+# -------------------------------------------------------------------------------------------------
+# A pytorch SSIM and SSIM 3D implementation
 
 def gaussian(window_size, sigma):
     gauss = torch.Tensor([exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
@@ -1020,5 +1006,3 @@ def ssim3D(img1, img2, window_size = 11, size_average = True):
     window = window.type_as(img1)
     
     return _ssim_3D(img1, img2, window, window_size, channel, size_average)
-
-###################################################################################################

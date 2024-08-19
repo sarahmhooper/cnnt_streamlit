@@ -6,9 +6,9 @@ Supports 3D image plotting
 
 from utils.utils import normalize_image
 from outputs.plotting_options import plot_three
-from outputs.outputs_variations import download_files
+from outputs.outputs_variations import *
 
-class Outputs_Class():
+class Output_Class():
     """
     Class for holding finetuned model and noisy and clean images
 
@@ -31,28 +31,36 @@ class Outputs_Class():
         self.infer_func = infer_func
         self.scale = scale
 
-    def set_lists(self, noisy_im_list, noisy_im_names, clean_im_list):
+    def set_lists(self, noisy_im_list, noisy_im_names, clean_im_list=None, cpred_im_list=None):
         # set given lists
         # TODO: some checks to make sure the images correspond correctly
 
         self.noisy_im_list = noisy_im_list
         self.noisy_im_names = noisy_im_names
         self.clean_im_list = clean_im_list
-        self.cpred_im_list = [None for _ in range(len(noisy_im_list))]
+        self.cpred_im_list = cpred_im_list
 
     # Not needed for finetuning
-    # def set_download_params(self, format_a, format_d, d_typ, d_ind, d_for, format_a_org, format_d_org):
-    #     # set up download params for the download button
+    def set_download_params(self, format_a, format_d, d_typ, d_ind, d_for, format_a_org, format_d_org):
+        # set up download params for the download button
 
-    #     self.format_a = format_a_org if format_a=="Same as input" else format_a
-    #     self.format_d = format_d_org if format_d=="Same as input" else format_d
-    #     self.d_typ = d_typ
-    #     self.d_ind = d_ind
-    #     self.d_for = d_for
+        self.format_a = format_a_org if format_a=="Same as input" else format_a
+        self.format_d = format_d_org if format_d=="Same as input" else format_d
+        self.d_typ = d_typ
+        self.d_ind = d_ind
+        self.d_for = d_for
+    
+    def prepare_download(self):
+        # once params are set, prepare the download button
 
-    def prepare_download(self, d_typ):
-        # prepare the download button
-        download_files(self.model, self.config, d_typ)
+        image_list = [self.cpred_im_list[self.d_ind]] if self.d_typ!="Download all as zip" else self.cpred_im_list
+        image_list = [set_image(x, self.format_a, self.format_d) for x in image_list]
+
+        download_files(image_list, self.noisy_im_names, self.d_for)
+
+    # def prepare_download(self, d_typ):
+    #     # prepare the download button
+    #     download_files(self.model, self.config, d_typ)
 
     def plot_image(self, index):
         # Given index, plot the pair of noisy, pred, and clean images
@@ -60,7 +68,10 @@ class Outputs_Class():
         name = self.noisy_im_names[index]
 
         noisy_im = normalize_image(self.noisy_im_list[index], values=(0, self.scale), clip=True)
-        clean_im = normalize_image(self.clean_im_list[index], values=(0, self.scale), clip=True)
+        if self.clean_im_list is not None:
+            clean_im = normalize_image(self.clean_im_list[index], values=(0, self.scale), clip=True)
+        else:
+            clean_im = None
 
         if self.cpred_im_list[index] is not None:
             cpred_im = self.cpred_im_list[index]

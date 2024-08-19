@@ -2,6 +2,7 @@
 General purpose utilities for the UI
 """
 
+import os
 import torch
 import argparse
 import numpy as np
@@ -18,19 +19,40 @@ def arg_parse():
     """
 
     parser = argparse.ArgumentParser("Argument parser for CNNT_Streamlit Inference UI")
+    parser.add_argument("--debug", "-D", action="store_true", help='Option to run in debug mode')
     parser.add_argument("--model_path_dir", type=str, default=None, help='The folder containing models')
     parser.add_argument("--run_type", type=str, default="inference", help='"inference" or "finetuning"')
 
     parser.add_argument("--cutout", nargs="+", type=int, default=[8,128,128], help='cutout for inference')
     parser.add_argument("--overlap", nargs="+", type=int, default=[2,32,32], help='overlap for inference')
-    parser.add_argument("--device", type=str, default="cuda", help='the device to run on')
+    parser.add_argument("--cuda_devices", type=str, default=None, help='devices for cuda training')
     parser.add_argument("--num_workers", type=int, default=0, help='worker for dataloader')
     parser.add_argument("--prefetch_factor", type=int, default=2, help='prefetching for dataloader')
 
-
     args = parser.parse_args()
 
+    args = check_args(args)
+
     return args
+
+def check_args(args):
+    #TODO: check args properly
+
+    if args.cuda_devices == "cuda":
+        args.device = "cuda"
+    elif args.cuda_devices is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_devices
+        args.device = "cuda"
+    else:
+        args.device = "cpu"
+
+    return args
+
+def is_inf_mode():
+    return st.session_state.args.run_type == "inference"
+
+def is_dbg_mode():
+    return st.session_state.args.debug
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
@@ -68,7 +90,7 @@ def normalize_image(image, percentiles=None, values=None, clip=True):
 
     return n_img
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 # Custom exceptions
 
 class FileTypeNotSupported(Exception):

@@ -134,7 +134,7 @@ def running_inference_per_image(model, image,
     # return a 3dim numpy and 5dim torch.tensor for easier followups
     return image_fin, torch.from_numpy(image_fin[np.newaxis,:,np.newaxis]).to(device)
 
-###################################################################################################
+# -------------------------------------------------------------------------------------------------
 
 def running_inference(model, cut_np_images, cutout, overlap, device):
     """

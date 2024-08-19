@@ -8,33 +8,36 @@ import datetime
 import streamlit as st
 
 from utils.utils import *
-from inputs.inputs_class import Inputs_Class
+from inputs.input_class import Input_Class
 from model.model_class import Model_Class
-from outputs.outputs_class import Outputs_Class
+from outputs.output_class import Output_Class
 
 def init_session_state():
     # Initializes the classes and page number
 
     args = arg_parse()
 
+    if "args" not in st.session_state:
+        st.session_state.args = args
+
     if "page_num" not in st.session_state:
         st.session_state.page_num = 0
 
-    if "inputs_class" not in st.session_state:
-        st.session_state.inputs_class = Inputs_Class()
+    if "input_class" not in st.session_state:
+        st.session_state.input_class = Input_Class()
 
     if "model_class" not in st.session_state:
         st.session_state.model_class = Model_Class(args=args)
 
-    if "outputs_class" not in st.session_state:
-        st.session_state.outputs_class = Outputs_Class()
+    if "output_class" not in st.session_state:
+        st.session_state.output_class = Output_Class()
 
     now = datetime.datetime.now()
     now = now.strftime("%m-%d-%Y_T%H-%M-%S")
     if "datetime" not in st.session_state:
         st.session_state.datetime = now
 
-def nextpage(): st.session_state.page_num += 0.5
+def nextpage(): st.session_state.page_num += 1
 def prevpage(): st.session_state.page_num -= 1
 def restart(): reset_session_state(); init_session_state()
 
@@ -46,19 +49,25 @@ from pseudo_pages.page_2 import page_2
 
 sst = st.session_state
 
+disable_next = (sst.page_num >= 2)
+
 if sst.page_num == 0:
+    st.title("Inference Session: Setup")
     page_0()
+    disable_next |= (not sst.model_class.is_model_loaded())
+    disable_next |= (not sst.input_class.get_num_images())
 
-if sst.page_num == 0.5: # Extra page to flush out the screen
-    st.write("Config setup complete")
-    st.write("Click \"Next\" to begin training")
-
-if sst.page_num == 1:
+elif sst.page_num == 1:
+    st.title("Inference Session: Running")
     page_1()
 
-if sst.page_num == 2 or sst.page_num == 1.5: # 1.5 because incrementing with 0.5
+elif sst.page_num == 2:
+    st.title("Inference Session: Download Results")
     page_2()
 
+if sst.args.debug:
+    st.write(f"disable: {disable_next}, model_loaded: {sst.model_class.is_model_loaded()}, num_images: {sst.input_class.get_num_images()}")
+
 # Render buttons at the bottom of the page to prevent early render
-st.button("Next",on_click=nextpage,disabled=(sst.page_num >= 1.5))
+st.button("Next",on_click=nextpage,disabled=disable_next)
 st.button("Restart",on_click=restart,disabled=(sst.page_num == 0))

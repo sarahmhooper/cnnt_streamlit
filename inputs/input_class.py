@@ -15,7 +15,7 @@ from inputs.inputs_variations import read_inputs
 from inputs.inputs_variations import set_image
 
 
-class Inputs_Class():
+class Input_Class():
     """
     Class for holding the inputs given and provides access to them
 
@@ -34,15 +34,24 @@ class Inputs_Class():
 
         self.images = {}
 
-    def read_inputs_files(self, noisy_list_raw, clean_list_raw):
+        self.noisy_im_names = []
+        self.noisy_im_list = []
+        self.clean_im_names = []
+        self.clean_im_list = []
+
+    def read_inputs_files(self, noisy_list_raw, clean_list_raw=[]):
         # Read noisy and clean using the one function
 
-        self.noisy_im_names, self.noisy_im_list, self.noisy_format_a, self.noisy_format_d = read_inputs(noisy_list_raw)
-        self.clean_im_names, self.clean_im_list, self.clean_format_a, self.clean_format_d = read_inputs(clean_list_raw)
+        if len(noisy_list_raw) == 0: return 0, 0
 
-        assert(self.noisy_format_a == self.clean_format_a)
-        assert(self.noisy_format_d == self.clean_format_d)
-        assert(len(self.noisy_im_list)==len(self.noisy_im_names)==len(self.clean_im_list)==len(self.clean_im_names))
+        self.noisy_im_names, self.noisy_im_list, self.noisy_format_a, self.noisy_format_d = read_inputs(noisy_list_raw)
+
+        if len(clean_list_raw) != 0:
+            self.clean_im_names, self.clean_im_list, self.clean_format_a, self.clean_format_d = read_inputs(clean_list_raw)
+
+            assert(self.noisy_format_a == self.clean_format_a)
+            assert(self.noisy_format_d == self.clean_format_d)
+            # assert(len(self.noisy_im_list)==len(self.noisy_im_names)==len(self.clean_im_list)==len(self.clean_im_names))
         # TODO: more checks
 
         def sort_by_name(names, images):
@@ -53,10 +62,10 @@ class Inputs_Class():
             return ([i for i,j in test], [j for i, j in test])
 
         self.noisy_im_names, self.noisy_im_list = sort_by_name(self.noisy_im_names, self.noisy_im_list)
-        self.clean_im_names, self.clean_im_list = sort_by_name(self.clean_im_names, self.clean_im_list)
+        if len(clean_list_raw) != 0: self.clean_im_names, self.clean_im_list = sort_by_name(self.clean_im_names, self.clean_im_list)
 
-        self.format_a = self.clean_format_a
-        self.format_d = self.clean_format_d
+        self.format_a = self.noisy_format_a
+        self.format_d = self.noisy_format_d
 
         return self.format_a, self.format_d
 
@@ -143,7 +152,10 @@ class Inputs_Class():
     def get_clean_im_name(self, ind):
         # Retrieve specific clean image name
 
-        return self.clean_im_names[ind]
+        try:
+            return self.clean_im_names[ind]
+        except IndexError:
+            return None
 
     def get_clean_im_names(self):
         # Retrieve all  clean image names
