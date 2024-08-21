@@ -36,13 +36,11 @@ def model_setup_st():
     def load_model_wrapper():
         placeholder3.text(f"Model loading in progress: {model_name}")
         model_files = []
-        mc.set_model_path(model_name=model_name, model_files=model_files)
-        mc.load_model(is_inf)
+        mc.load_model(model_name, model_files, is_inf)
 
     col2.button("Load Model", on_click=load_model_wrapper, disabled=model_name is None, use_container_width=True)
 
-    if mc.is_model_loaded():
-        placeholder3.text(f"Model loading complete: {model_name}")
+    placeholder3.text(f"Model loaded: {mc.model_name}")
 
 # def get_model():
 

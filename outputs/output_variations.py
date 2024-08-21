@@ -87,26 +87,27 @@ def write_tiff(image):
     # individual tiff
 
     final_buffer = io.BytesIO()
-    tifffile.imwrite(final_buffer, image)
+    tifffile.imwrite(final_buffer, image, metadata={'axes': 'TYX'})
     return final_buffer
 
 def write_tiff_zip(image_list, names_list):
     # all as tiffs zipped
 
     final_buffer = io.BytesIO()
+    buffer_list = []
 
     with zipfile.ZipFile(final_buffer, "w") as myzip:
         
         for i, image in enumerate(image_list):
-            temp_buff = io.BytesIO()
-            tifffile.imwrite(temp_buff, image)
+            temp_buff = write_tiff(image)
+            buffer_list.append(temp_buff)
             myzip.writestr(f"{names_list[i]}_predicted.tiff", temp_buff.getvalue())
 
-    return final_buffer
+    return final_buffer, buffer_list
 
 # -------------------------------------------------------------------------------------------------
 
-def download_files(file_list, file_names, format):
+def create_download_buffer(file_list, file_names, format):
 
     d_one = len(file_list)==1
 
@@ -115,11 +116,7 @@ def download_files(file_list, file_names, format):
     else:
         raise NotImplementedError
 
-    st.download_button(
-        label="Download Predicted Clean Image(s)",
-        data = final_buffer, # Download buffer
-        file_name = f'{file_names[0]}_predicted.tiff' if d_one else 'Pred_Clean.zip' 
-    )
+    return final_buffer
 
 # -------------------------------------------------------------------------------------------------
 

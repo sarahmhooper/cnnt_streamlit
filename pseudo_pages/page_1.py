@@ -29,9 +29,4 @@ def page_1():
     # oc.set_model(model=model_tuned, config=config, infer_func=mc.run_inference, scale=ic.get_scale())
     # oc.set_lists(noisy_im_list=ic.get_noisy_ims(), noisy_im_names=ic.get_noisy_im_names(), clean_im_list=ic.get_clean_ims())
 
-    oc.set_model(mc.model, mc.config, mc.run_inference, ic.get_scale())
-
-
-    pred_im_list = mc.run_inference(ic.get_noisy_ims())
-
-    oc.set_lists(noisy_im_list=ic.get_noisy_ims(), noisy_im_names=ic.get_noisy_im_names(), cpred_im_list=pred_im_list)
+    ic.set_predi_im_list(mc.run_inference(ic.noisy_im_list))

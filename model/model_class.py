@@ -11,8 +11,8 @@ import torch
 import random
 import numpy as np
 
-from model.models_variations import load_model
-from model.models_variations import model_list_from_dir
+from model.model_variations import load_model
+from model.model_variations import model_list_from_dir
 from model.running_inference import running_inference
 from model.microscopy_dataset import MicroscopyDataset
 
@@ -36,30 +36,17 @@ class Model_Class():
 
         self.model = None
         self.config = None
+        self.model_name = None
         self.model_path = None
 
+        self.args = args
         self.device = args.device
-        self.cutout = args.cutout
-        self.overlap = args.overlap
         self.model_path_dir = args.model_path_dir
-        # self.check_path = args.check_path
-        self.num_workers = args.num_workers
-        self.prefetch_factor = args.prefetch_factor
 
     def get_model_list(self):
         # Retrieve the possible models from given model path directory
 
         return model_list_from_dir(self.model_path_dir)
-
-    def set_model_path(self, model_name, model_files):
-        # Given model name, set the model path. Load later
-        if model_files == []:
-            model_path = os.path.join(self.model_path_dir, model_name)
-            self.model_files = []
-            self.model_path = model_path
-        else:
-            self.model_files = model_files
-            self.model_path = None
 
     def set_config_update_dict(self, config_update_dict):
         # Save the config update to setup the model later
@@ -70,10 +57,11 @@ class Model_Class():
         config_update_dict["device"] = self.device
         self.config_update_dict = config_update_dict
 
-    def load_model(self, is_inf=True):
-        # Load model before inference
+    def load_model(self, model_name, model_files, is_inf=True):
 
-        self.model, self.config = load_model(model_path=self.model_path, model_files=self.model_files, config_update_dict={}, device=self.device)
+        model_path = os.path.join(self.model_path_dir, model_name)
+        self.model, self.config = load_model(model_path=model_path, model_files=model_files, config_update_dict={}, device=self.device)
+        self.model_name = model_name
 
     def is_model_loaded(self):
 
@@ -107,12 +95,12 @@ class Model_Class():
         # Run inference on loaded model and given images
         # cut_np_images: 3D numpy images of axis order: THW
 
-        return running_inference(self.model, noisy_image, self.cutout, self.overlap, self.device)
+        return running_inference(self.model, noisy_image, self.args.cutout, self.args.overlap, self.device)
 
     def run_finetuning(self, train_set, val_set):
         # Run the finetuning cycle and update the model and config
         
-        model, config = train(self.model, self.config, train_set, val_set, self.device, self.num_workers, self.prefetch_factor)
+        model, config = train(self.model, self.config, train_set, val_set, self.device, self.args.num_workers, self.args.prefetch_factor)
         self.model = model
         self.config = config
 

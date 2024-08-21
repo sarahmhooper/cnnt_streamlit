@@ -18,23 +18,13 @@ def image_reader_st():
     
     noisy_images = st.file_uploader("Noisy Image(s)", accept_multiple_files=True)
 
-    # clean_img_str = "Clean Image(s) (optional for comparison)" if is_inf else "Clean Image(s)"
-    # clean_images = st.file_uploader(clean_img_str, accept_multiple_files=True)
-    clean_images = []
-
-    # if noisy_images == [] or clean_images == []:
-    #     st.stop()
+    clean_img_str = "Clean Image(s) (optional for comparison)" if is_inf else "Clean Image(s)"
+    clean_images = st.file_uploader(clean_img_str, accept_multiple_files=True)
 
     if len(noisy_images):
-
-        format_a, format_d = ic.read_inputs_files(noisy_images, clean_images)
-
+        with st.spinner("Reading inputs"):
+            ic.read_input_files(noisy_images, clean_images)
         display_image_info()
-
-        # format_a, format_d = get_formats(format_a, format_d)
-        ic.set_format(format_a=format_a, format_d=format_d)
-
-
 
 def display_image_info():
 
@@ -45,9 +35,9 @@ def display_image_info():
         shape_dict = {}
 
         for i in range(ic.get_num_images()):
-            noisy_name_dict[f"{i}"] = ic.get_noisy_im_name(i)
-            clean_name_dict[f"{i}"] = ic.get_clean_im_name(i)
-            shape_dict[f"{i}"] = ic.get_noisy_im_shape(i)
+            noisy_name_dict[f"{i}"] = ic.noisy_im_names[i]
+            clean_name_dict[f"{i}"] = ic.clean_im_names[i] if ic.clean_im_names is not None else "None"
+            shape_dict[f"{i}"] = ic.noisy_im_list[i].shape
 
         final_dict = {
             "Noisy":noisy_name_dict,
@@ -57,22 +47,4 @@ def display_image_info():
 
         return final_dict
 
-    # # 5 images per tab
-    # num_images = ic.get_num_images()
-    # images_per_tab = 5
-    # num_tabs = math.ceil(num_images/images_per_tab)
-
-    # tab_list = st.tabs([f"Images {i*5}-{i*images_per_tab+4}" for i in range(num_tabs)])
-
-    # for i, tab in enumerate(tab_list):
-
-    #     start = i*5
-    #     end = min(num_images, i*5+5)
-
-    #     with tab:
-    #         st.table(build_info_table(start, end))
-
     st.dataframe(build_info_table(), use_container_width=True)
-
-    return
-
