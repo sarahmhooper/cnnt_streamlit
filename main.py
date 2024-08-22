@@ -48,25 +48,27 @@ from pseudo_pages.page_1 import page_1
 from pseudo_pages.page_2 import page_2
 
 sst = st.session_state
-
+is_inf = is_inf_mode()
+title_str = "Inference" if is_inf else "Finetuning"
 disable_next = (sst.page_num >= 2)
 
 if sst.page_num == 0:
-    st.title("Inference Session: Setup")
+    st.title(f"{title_str} Session: Setup")
     page_0()
     disable_next |= (not sst.model_class.is_model_loaded())
     disable_next |= (not sst.input_class.get_num_images())
 
 elif sst.page_num == 1:
-    st.title("Inference Session: Running")
+    st.title(f"{title_str} Session: Running")
     page_1()
 
 elif sst.page_num == 2:
-    st.title("Inference Session: Download Results")
+    st.title(f"{title_str} Session: Download Results")
     page_2()
 
 if sst.args.debug:
     st.write(f"disable: {disable_next}, model_loaded: {sst.model_class.is_model_loaded()}, num_images: {sst.input_class.get_num_images()}")
+    disable_next = False
 
 # Render buttons at the bottom of the page to prevent early render
 st.button("Next",on_click=nextpage,disabled=disable_next)

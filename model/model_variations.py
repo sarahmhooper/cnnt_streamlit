@@ -106,14 +106,45 @@ def load_model_path(model_path, config_update_dict, device):
 
 #     return model, config
 
-# -------------------------------------------------------------------------------------------------
+def load_config_from_path(load_path):
 
+    model_dict = torch.load(load_path)
+    config = model_dict['config']
+    config.load_path = load_path
+    return config
+
+def update_config(config, config_update):
+
+    if not isinstance(config, dict): config = vars(config)
+    if not isinstance(config_update, dict): config_update = vars(config_update)
+
+    for key in config_update:
+        config[key] = config_update[key]
+
+    config = Namespace(**config)
+
+    return config
+
+def load_model_from_config(config):
+
+    model_dict = torch.load(config.load_path)
+    model = CNNT_enhanced_denoising_runtime(config=config)
+    model.load_state_dict(model_dict["model_state"])
+
+    return model, config
+
+def load_model_from_path(load_path, device):
+
+    config = load_config_from_path(load_path)
+    config.device = device
+    return load_model_from_config(config)
+
+# -------------------------------------------------------------------------------------------------
 # Wrapper around local vs uploaded models
 
-def load_model(model_path, model_files, config_update_dict, device):
+def load_model(model_path=None, config=None, device=None):
 
-    if model_path != None:
-        return load_model_path(model_path=model_path, config_update_dict=config_update_dict, device=device)
+    if config is None:
+        return load_model_from_path(model_path, device)
     else:
-        raise NotImplementedError(f"Loading from uploaded model not supported yet")
-        # return load_model_file(model_files=model_files, config_update_dict=config_update_dict)
+        return load_model_from_config(config)

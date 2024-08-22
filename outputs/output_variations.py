@@ -107,6 +107,20 @@ def write_tiff_zip(image_list, names_list):
 
 # -------------------------------------------------------------------------------------------------
 
+def write_model(model, config):
+
+    final_buffer = io.BytesIO()
+
+    torch.save({
+        "epoch":config.num_epochs,
+        "model_state": model.state_dict(),
+        "config": config,
+    }, final_buffer)
+
+    return final_buffer
+
+# -------------------------------------------------------------------------------------------------
+
 def create_download_buffer(file_list, file_names, format):
 
     d_one = len(file_list)==1

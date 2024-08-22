@@ -36,7 +36,7 @@ def model_setup_st():
     def load_model_wrapper():
         placeholder3.text(f"Model loading in progress: {model_name}")
         model_files = []
-        mc.load_model(model_name, model_files, is_inf)
+        mc.load_model(model_name, model_files)
 
     col2.button("Load Model", on_click=load_model_wrapper, disabled=model_name is None, use_container_width=True)
 

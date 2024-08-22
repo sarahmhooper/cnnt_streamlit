@@ -25,7 +25,15 @@ class Output_Class():
         if self.image_all_buffer is None:
             self.image_all_buffer, self.image_idx_buffer = write_tiff_zip(image_list, names_list)
             self.image_names_list = [f"{name}_predicted.tiff" for name in names_list]
+
         return self.image_all_buffer
+    
+    def prepare_download_model(self, model, config):
+
+        if self.model_buffer is None:
+            self.model_buffer = write_model(model, config)
+
+        return self.model_buffer
 
     def get_download_image_idx(self, idx):
 

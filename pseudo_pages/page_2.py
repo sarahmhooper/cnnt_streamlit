@@ -22,6 +22,6 @@ def page_2():
 
     download_st()
 
-    st.markdown("""---""")
+    st.divider()
 
     plotting_st()

@@ -541,7 +541,10 @@ class CNNT_base_model_runtime(nn.Module):
         # logging.info(f"Loading model from {load_path}")
         if(device is None):
             device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.load_state_dict(torch.load(load_path, map_location=device))
+        try:
+            self.load_state_dict(torch.load(load_path, map_location=device))
+        except:
+            self.load_state_dict(torch.load(load_path, map_location=device)["model_state"])
 
 # -------------------------------------------------------------------------------------------------
 

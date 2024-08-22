@@ -20,9 +20,13 @@ def download_st():
     with st.spinner("Preparing Download"):
         if is_inf:
             oc.prepare_download_image_all(ic.predi_im_list, ic.noisy_im_names)
+        else:
+            oc.prepare_download_model(mc.model, mc.config)
 
     if is_inf:
         download_inference_interface(ic.get_num_images())
+    else:
+        download_finetuning_interface()
 
 def download_inference_interface(num_images):
 
@@ -60,3 +64,11 @@ def download_inference_interface(num_images):
                 data = oc.image_all_buffer, # Download buffer
                 file_name = 'All_predicted_clean_images.zip' 
             )
+
+def download_finetuning_interface():
+
+    st.download_button(
+        label=f"Download Model",
+        data = oc.model_buffer, # Download buffer
+        file_name = f"{mc.config.model_file_name}.pth"
+    )

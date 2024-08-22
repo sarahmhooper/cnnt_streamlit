@@ -60,6 +60,11 @@ class Input_Class():
         # Total number of images
         return len(self.noisy_im_list) if self.noisy_im_list is not None else 0
 
+    # def get_num_images(self, is_inf):
+    #     # Total number of images
+    #     num_images = 
+    #     return len(self.noisy_im_list) if self.noisy_im_list is not None else 0
+
     def set_predi_im_idx(self, predi_im, idx):
 
         self.predi_im_list[idx] = predi_im

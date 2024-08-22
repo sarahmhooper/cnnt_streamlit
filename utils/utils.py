@@ -8,6 +8,9 @@ import argparse
 import numpy as np
 import streamlit as st
 
+from scipy.ndimage import shift
+from skimage.registration import phase_cross_correlation
+
 def reset_session_state():
 
     for key in st.session_state.keys():
@@ -26,8 +29,8 @@ def arg_parse():
     parser.add_argument("--cutout", nargs="+", type=int, default=[8,128,128], help='cutout for inference')
     parser.add_argument("--overlap", nargs="+", type=int, default=[2,32,32], help='overlap for inference')
     parser.add_argument("--cuda_devices", type=str, default=None, help='devices for cuda training')
-    parser.add_argument("--num_workers", type=int, default=0, help='worker for dataloader')
-    parser.add_argument("--prefetch_factor", type=int, default=2, help='prefetching for dataloader')
+    parser.add_argument("--num_workers", type=int, default=2, help='worker for dataloader')
+    parser.add_argument("--prefetch_factor", type=int, default=4, help='prefetching for dataloader')
 
     args = parser.parse_args()
 
@@ -89,6 +92,20 @@ def normalize_image(image, percentiles=None, values=None, clip=True):
         return torch.clip(n_img, 0, 1) if type(n_img)==torch.Tensor else np.clip(n_img, 0, 1)
 
     return n_img
+
+def register_translation_3D(noisy, clean):
+    # Register noisy clean pair using translation
+
+    (z_off, y_off, x_off), _, _ = phase_cross_correlation(clean, noisy, return_error=False)
+
+    return shift(noisy, shift=(z_off, y_off, x_off), mode="reflect")
+
+def infer_scale(image):
+
+    if image.dtype == np.uint16: return 4096
+    if image.dtype == np.uint8: return 256
+
+    return 65536
 
 # -------------------------------------------------------------------------------------------------
 # Custom exceptions

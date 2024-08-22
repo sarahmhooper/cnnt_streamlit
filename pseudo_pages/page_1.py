@@ -8,6 +8,7 @@ Requires a click to get to next page
 import streamlit as st
 
 from utils.utils import *
+from pseudo_pages.page_1_helpers import *
 
 from inputs.input_class import Input_Class
 from model.model_class import Model_Class
@@ -17,6 +18,7 @@ ic : Input_Class = st.session_state.input_class
 mc : Model_Class = st.session_state.model_class
 oc : Output_Class = st.session_state.output_class
 
+sst = st.session_state
 
 def page_1():
 
@@ -29,4 +31,7 @@ def page_1():
     # oc.set_model(model=model_tuned, config=config, infer_func=mc.run_inference, scale=ic.get_scale())
     # oc.set_lists(noisy_im_list=ic.get_noisy_ims(), noisy_im_names=ic.get_noisy_im_names(), clean_im_list=ic.get_clean_ims())
 
-    ic.set_predi_im_list(mc.run_inference(ic.noisy_im_list))
+    if is_inf:
+        run_inference_st()
+    else:
+        run_training_st()

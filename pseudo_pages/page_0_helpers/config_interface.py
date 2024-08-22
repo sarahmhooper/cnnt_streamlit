@@ -1,6 +1,46 @@
 
 
 import streamlit as st
+from datetime import datetime
+
+from utils.utils import *
+
+from inputs.input_class import Input_Class
+from model.model_class import Model_Class
+from outputs.output_class import Output_Class
+
+ic : Input_Class = st.session_state.input_class
+mc : Model_Class = st.session_state.model_class
+oc : Output_Class = st.session_state.output_class
+
+
+def config_update_st():
+
+    sst = st.session_state
+
+    if (not is_inf_mode()) and mc.is_model_loaded() and ic.get_num_images():
+
+        config_update = {
+            "model_path_dir" : mc.model_path_dir,
+            "model_file_name" : f"test_run_{sst.datetime}",
+            "num_epochs" : 30 if not sst.args.debug else 2,
+            "im_value_scale" : [0,infer_scale(ic.noisy_im_list[0])],
+            "global_lr" : 2.5e-5,
+            "device" : sst.args.device,
+            "num_workers" : sst.args.num_workers,
+            "prefetch_factor" : sst.args.prefetch_factor,
+        }
+
+        mc.update_config(config_update)
+        mc.reload_model()
+
+    # current_config = mc.config
+    # current_config_dict = vars(current_config)
+
+    # st.data_editor(current_config_dict)
+
+    # print(current_config_dict)
+    # st.write(current_config_dict)
 
 
 def get_config_update():
