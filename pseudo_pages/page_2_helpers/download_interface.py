@@ -5,7 +5,7 @@ import streamlit as st
 from utils.utils import *
 
 from inputs.input_class import Input_Class
-from model.model_class import Model_Class
+from models.model_class import Model_Class
 from outputs.output_class import Output_Class
 
 ic : Input_Class = st.session_state.input_class

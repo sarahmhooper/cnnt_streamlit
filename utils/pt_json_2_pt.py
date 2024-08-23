@@ -5,7 +5,7 @@ import os
 import json
 import torch
 from argparse import Namespace
-from model.model_cnnt import CNNT_enhanced_denoising_runtime
+from models.model_cnnt import CNNT_enhanced_denoising_runtime
 
 
 models_dir = "./saved_models"

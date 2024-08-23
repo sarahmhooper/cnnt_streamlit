@@ -8,7 +8,7 @@ import torch
 import numpy as np
 
 from utils.utils import *
-from model.model_cnnt import *
+from models.model_cnnt import *
 from torch.utils.data.dataloader import DataLoader
 from .running_inference import running_inference_per_image
 

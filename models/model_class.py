@@ -9,7 +9,7 @@ Hold items related to the model:
 import os
 
 from utils.utils import *
-from model.model_variations import load_model, update_config, model_list_from_dir
+from models.model_variations import load_model, update_config, model_list_from_dir
 
 # -------------------------------------------------------------------------------------------------
 

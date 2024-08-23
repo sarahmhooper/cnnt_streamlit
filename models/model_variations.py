@@ -8,7 +8,7 @@ import torch
 import pathlib
 from argparse import Namespace
 
-from model.model_cnnt import CNNT_enhanced_denoising_runtime
+from models.model_cnnt import CNNT_enhanced_denoising_runtime
 from utils.utils import *
 
 # -------------------------------------------------------------------------------------------------
