@@ -65,7 +65,6 @@ def set_scale_inf():
 def set_scale_and_register_fnt():
 
     im_value_scale = infer_scale(ic.noisy_im_list[0])
-    print(ic.noisy_im_list[0].dtype)
 
     st.write(f"Enter values to scale images with. The default values for dtype {ic.noisy_im_list[0].dtype} are:")
     col1, col2 = st.columns(2)
