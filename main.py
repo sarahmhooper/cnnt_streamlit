@@ -17,6 +17,9 @@ def init_session_state():
 
     args = arg_parse()
 
+    if "run_type" not in st.session_state:
+        st.session_state.run_type = "Inference"
+
     if "args" not in st.session_state:
         st.session_state.args = args
 
@@ -53,10 +56,11 @@ title_str = "Inference" if is_inf else "Finetuning"
 disable_next = (sst.page_num >= 2)
 
 if sst.page_num == 0:
+    sst.run_type = st.radio("Run type?", ["Inference", "Finetuning"], horizontal=True, label_visibility="hidden")
     st.title(f"{title_str} Session: Setup")
     page_0()
     disable_next |= (not sst.model_class.is_model_loaded())
-    disable_next |= (not sst.input_class.get_num_images())
+    disable_next |= (not sst.input_class.get_num_images() or (not is_inf and sst.input_class.clean_im_list is None))
 
 elif sst.page_num == 1:
     st.title(f"{title_str} Session: Running")
@@ -67,8 +71,9 @@ elif sst.page_num == 2:
     page_2()
 
 if sst.args.debug:
-    st.write(f"disable: {disable_next}, model_loaded: {sst.model_class.is_model_loaded()}, num_images: {sst.input_class.get_num_images()}")
-    disable_next = False
+    st.write(f"disable: {disable_next}, \
+                model_loaded: {sst.model_class.is_model_loaded()}, \
+                num_images: {sst.input_class.get_num_images()}")
 
 # Render buttons at the bottom of the page to prevent early render
 st.button("Next",on_click=nextpage,disabled=disable_next)

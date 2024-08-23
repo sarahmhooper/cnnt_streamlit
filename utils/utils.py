@@ -24,7 +24,6 @@ def arg_parse():
     parser = argparse.ArgumentParser("Argument parser for CNNT_Streamlit Inference UI")
     parser.add_argument("--debug", "-D", action="store_true", help='Option to run in debug mode')
     parser.add_argument("--model_path_dir", type=str, default=None, help='The folder containing models')
-    parser.add_argument("--run_type", type=str, default="inference", help='"inference" or "finetuning"')
 
     parser.add_argument("--cutout", nargs="+", type=int, default=[8,128,128], help='cutout for inference')
     parser.add_argument("--overlap", nargs="+", type=int, default=[2,32,32], help='overlap for inference')
@@ -52,7 +51,7 @@ def check_args(args):
     return args
 
 def is_inf_mode():
-    return st.session_state.args.run_type == "inference"
+    return st.session_state.run_type == "Inference"
 
 def is_dbg_mode():
     return st.session_state.args.debug
@@ -96,16 +95,16 @@ def normalize_image(image, percentiles=None, values=None, clip=True):
 def register_translation_3D(noisy, clean):
     # Register noisy clean pair using translation
 
-    (z_off, y_off, x_off), _, _ = phase_cross_correlation(clean, noisy, return_error=False)
+    (z_off, y_off, x_off), _, _ = phase_cross_correlation(clean, noisy)
 
     return shift(noisy, shift=(z_off, y_off, x_off), mode="reflect")
 
 def infer_scale(image):
 
-    if image.dtype == np.uint16: return 4096
-    if image.dtype == np.uint8: return 256
+    if image.dtype == np.uint16: return [0.0,4096.0]
+    if image.dtype == np.uint8: return [0.0,256.0]
 
-    return 65536
+    return [0.0,65536.0]
 
 # -------------------------------------------------------------------------------------------------
 # Custom exceptions
