@@ -18,6 +18,10 @@ sst = st.session_state
 
 def run_training_st():
 
+    with st.spinner("Preparing Images"):
+        ic.scale_images()
+        ic.register_images()
+
     train_set, val_set = data_setup(mc.config, ic.noisy_im_list, ic.clean_im_list)
 
     model = train(mc.model, mc.config, train_set, val_set)

@@ -433,12 +433,11 @@ class CNNT_base_model_runtime(nn.Module):
                                                                     patience=5,
                                                                     min_lr=[2e-6, self.config.global_lr] if self.config.no_w_decay else 2e-6,
                                                                     cooldown=2,
-                                                                    factor=0.8,
-                                                                    verbose=True)
+                                                                    factor=0.8,)
                 self.scheduler_on_batch = False
 
             if (self.config.scheduler == "StepLR"):
-                self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, 5, gamma=0.8, last_epoch=-1, verbose=True)
+                self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, 5, gamma=0.8, last_epoch=-1,)
                 self.scheduler_on_batch = False
 
             # if (self.config.scheduler == "OneCycleLR"):

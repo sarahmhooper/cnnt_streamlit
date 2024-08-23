@@ -24,7 +24,7 @@ def config_update_st():
             "model_path_dir" : mc.model_path_dir,
             "model_file_name" : f"test_run_{sst.datetime}",
             "num_epochs" : 30 if not sst.args.debug else 2,
-            "im_value_scale" : [0,infer_scale(ic.noisy_im_list[0])],
+            "im_value_scale" : infer_scale(ic.noisy_im_list[0]),
             "global_lr" : 2.5e-5,
             "device" : sst.args.device,
             "num_workers" : sst.args.num_workers,

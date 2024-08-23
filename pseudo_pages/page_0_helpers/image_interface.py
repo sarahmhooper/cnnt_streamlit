@@ -26,6 +26,11 @@ def image_reader_st():
             ic.read_input_files(noisy_images, clean_images)
         display_image_info()
 
+        if is_inf:
+            set_scale_inf()
+        else:
+            set_scale_and_register_fnt()
+
 def display_image_info():
 
     def build_info_table():
@@ -48,3 +53,26 @@ def display_image_info():
         return final_dict
 
     st.dataframe(build_info_table(), use_container_width=True)
+
+def set_scale_inf():
+
+    if not mc.is_model_loaded(): return
+    im_value_scale = mc.config.im_value_scale
+
+    if isinstance(im_value_scale, int): im_value_scale = [0,im_value_scale]
+    ic.im_value_scale = im_value_scale
+
+def set_scale_and_register_fnt():
+
+    im_value_scale = infer_scale(ic.noisy_im_list[0])
+    print(ic.noisy_im_list[0].dtype)
+
+    st.write(f"Enter values to scale images with. The default values for dtype {ic.noisy_im_list[0].dtype} are:")
+    col1, col2 = st.columns(2)
+    with col1:
+        im_value_min = st.number_input(f"Min value", min_value=0.0, max_value=65535.0, value=im_value_scale[0])
+    with col2:
+        im_value_max = st.number_input(f"Max value", min_value=0.0, max_value=65536.0, value=im_value_scale[1])
+    ic.im_value_scale = [im_value_min, im_value_max]
+
+    ic.register_image_check = st.checkbox("Register images with translation in 3D before training?")

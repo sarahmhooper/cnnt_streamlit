@@ -10,6 +10,7 @@ Stores all as 3D images after loading
 """
 
 from inputs.input_variations import read_inputs
+from utils.utils import normalize_image, register_translation_3D
 
 class Input_Class():
     """
@@ -33,6 +34,9 @@ class Input_Class():
         self.clean_im_names = None
         self.clean_im_list = None
         self.predi_im_list = None
+
+        self.im_value_scale = None
+        self.register_image_check = False
 
         self.read_noisy_im_names = {*{}}
         self.read_clean_im_names = {*{}}
@@ -60,11 +64,6 @@ class Input_Class():
         # Total number of images
         return len(self.noisy_im_list) if self.noisy_im_list is not None else 0
 
-    # def get_num_images(self, is_inf):
-    #     # Total number of images
-    #     num_images = 
-    #     return len(self.noisy_im_list) if self.noisy_im_list is not None else 0
-
     def set_predi_im_idx(self, predi_im, idx):
 
         self.predi_im_list[idx] = predi_im
@@ -72,3 +71,16 @@ class Input_Class():
     def set_predi_im_list(self, predi_im_list):
 
         self.predi_im_list = predi_im_list
+
+    def scale_images(self):
+
+        # TODO: add parellism for faster execution
+        self.noisy_im_list = [normalize_image(noisy_im, values=self.im_value_scale, clip=True) for noisy_im in self.noisy_im_list]
+        if self.clean_im_list is not None:
+            self.clean_im_list = [normalize_image(clean_im, values=self.im_value_scale, clip=True) for clean_im in self.clean_im_list]
+
+    def register_images(self):
+
+        # TODO: add parellism for faster execution
+        if self.register_image_check:
+            self.noisy_im_list = [register_translation_3D(noisy_im, clean_im) for noisy_im, clean_im in zip(self.noisy_im_list, self.clean_im_list)]

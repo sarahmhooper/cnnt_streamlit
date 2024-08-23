@@ -17,6 +17,9 @@ sst = st.session_state
 
 def run_inference_st():
 
+    with st.spinner("Preparing Images"):
+        ic.scale_images()
+
     predi_im_list = running_inference(mc.model, 
                                         ic.noisy_im_list, 
                                         sst.args.cutout,
