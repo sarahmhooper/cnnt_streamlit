@@ -109,6 +109,11 @@ def write_tiff_zip(image_list, names_list):
 
 def write_model(model, config):
 
+    try:
+        model = model.cpu().module
+    except:
+        model = model.cpu()
+
     final_buffer = io.BytesIO()
 
     torch.save({

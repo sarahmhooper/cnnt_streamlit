@@ -39,10 +39,13 @@ class Model_Class():
 
         return model_list_from_dir(self.model_path_dir)
 
-    def load_model(self, model_name, model_files=None):
+    def load_model(self, model_name, model_file=None):
 
         self.model_path = os.path.join(self.model_path_dir, model_name)
-        self.model, self.config = load_model(model_path=self.model_path, device=self.device)
+        if model_file is None:
+            self.model, self.config = load_model(model_path=self.model_path, device=self.device)
+        else:
+            self.model, self.config = load_model(model_file=model_file, device=self.device)
         self.model_name = model_name
 
     def update_config(self, config_update):

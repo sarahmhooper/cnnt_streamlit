@@ -15,12 +15,10 @@ oc : Output_Class = st.session_state.output_class
 def model_setup_st():
 
     placeholder1 = st.empty()
-    # placeholder2 = st.empty()
-    placeholder3 = st.empty()
+    placeholder2 = st.empty()
 
-    is_inf = is_inf_mode()
-
-    model_list = mc.get_model_list()
+    model_list = ["Upload a Model", *mc.get_model_list()]
+    model_file = None
 
     col1, col2 = placeholder1.columns([3, 1])
 
@@ -29,19 +27,17 @@ def model_setup_st():
     model_name = col1.selectbox("Select the model", model_list, index=None,\
                                 placeholder="Select the model by clicking here", label_visibility="collapsed")
 
-    # if model_name == "Select a Model":
-    #     st.stop()
-    # if model_name == "Upload a Model":
-    #     model_files = get_model()
+    if model_name == "Upload a Model":
+        model_file = get_model()
     def load_model_wrapper():
-        placeholder3.text(f"Model loading in progress: {model_name}")
-        model_files = []
-        mc.load_model(model_name, model_files)
+        placeholder2.text(f"Model loading in progress: {model_name}")
+        mc.load_model(model_name, model_file)
 
-    col2.button("Load Model", on_click=load_model_wrapper, disabled=model_name is None, use_container_width=True)
+    disable_load = model_name is None or (model_name == "Upload a Model" and model_file is None)
+    col2.button("Load Model", on_click=load_model_wrapper, disabled=disable_load, use_container_width=True)
 
-    placeholder3.text(f"Model loaded: {mc.model_name}")
+    placeholder2.text(f"Model loaded: {mc.model_name}")
 
-# def get_model():
+def get_model():
 
-#     return st.file_uploader("Upload Model (.pt+.json)", accept_multiple_files=True)
+    return st.file_uploader("Upload Model", accept_multiple_files=False)

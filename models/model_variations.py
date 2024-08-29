@@ -139,12 +139,25 @@ def load_model_from_path(load_path, device):
     config.device = device
     return load_model_from_config(config)
 
+def load_model_from_files(model_file, device):
+
+    model_dict = torch.load(model_file)
+    config = model_dict['config']
+    config.device = device
+    model = CNNT_enhanced_denoising_runtime(config=config)
+    model.load_state_dict(model_dict["model_state"])
+    return model, config
+
 # -------------------------------------------------------------------------------------------------
 # Wrapper around local vs uploaded models
 
-def load_model(model_path=None, config=None, device=None):
+def load_model(model_path=None, model_file=None, config=None, device=None):
 
-    if config is None:
+    if model_path is not None:
         return load_model_from_path(model_path, device)
-    else:
+    elif model_file is not None:
+        return load_model_from_files(model_file, device)
+    elif config is not None:
         return load_model_from_config(config)
+    else:
+        raise ValueError(f"Need one of path or file or config to load model")

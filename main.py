@@ -77,4 +77,4 @@ if sst.args.debug:
 
 # Render buttons at the bottom of the page to prevent early render
 st.button("Next",on_click=nextpage,disabled=disable_next)
-st.button("Restart",on_click=restart,disabled=(sst.page_num == 0))
+# st.button("Restart",on_click=restart,disabled=(sst.page_num == 0)) # should refresh the page instead
