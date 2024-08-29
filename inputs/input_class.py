@@ -1,9 +1,7 @@
 """
 File for the input class
 
-Holds the given noisy and clean images and attributes related to it:
-- name
-- scale
+Holds the given noisy and clean images
 
 Supports loading multiple dimensions (See inputs_variations.py for detail on loading)
 Stores all as 3D images after loading
@@ -15,13 +13,6 @@ from utils.utils import normalize_image, register_translation_3D
 class Input_Class():
     """
     Class for holding the inputs given and provides access to them
-
-    Hold the following variables:
-        - noisy_im_names: the names of the noisy images given
-        - noisy_im_list: the given noisy images. each noisy image is a 3D numpy array
-        - clean_im_names: the names of the clean images given
-        - clean_im_list: the given clean images. each clean image is a 3D numpy array
-        - scale: that value to scale images with
 
     Allows access to indvidual/all images and names.
     """
@@ -38,14 +29,17 @@ class Input_Class():
         self.im_value_scale = None
         self.register_image_check = False
 
+        # set datatype to keep track of what images are loaded to avoid loading again
         self.read_noisy_im_names = {*{}}
         self.read_clean_im_names = {*{}}
 
     def read_input_files(self, noisy_list_raw, clean_list_raw=None):
         # Read noisy and clean using the one function
+        # can maybe return non 0 for error handling
 
         if len(noisy_list_raw) == 0: 0
 
+        # filter read images
         noisy_list_filtered = [x for x in noisy_list_raw if x.name not in self.read_noisy_im_names]
         if len(noisy_list_filtered):
             self.noisy_im_names, self.noisy_im_list = read_inputs(noisy_list_filtered)

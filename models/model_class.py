@@ -1,10 +1,7 @@
 """
 File for the model class
 
-Hold items related to the model:
-- name and directory
-- model itself
-- config
+Hold items related to the model
 """
 import os
 
@@ -15,16 +12,13 @@ from models.model_variations import load_model, update_config, model_list_from_d
 
 class Model_Class():
     """
-    Model class for background model finetuning
+    Class to hold the model
 
-    Loads the model
     Provides ways to setup and load model
-    Provides method to finetune the model
     """
 
     def __init__(self, args):
         # save path_dir given when starting the streamlit server
-        # save check_path for saving checkpoints
 
         self.model = None
         self.config = None
@@ -40,6 +34,7 @@ class Model_Class():
         return model_list_from_dir(self.model_path_dir)
 
     def load_model(self, model_name, model_file=None):
+        # load a model from name or from uploaded model file
 
         self.model_path = os.path.join(self.model_path_dir, model_name)
         if model_file is None:
@@ -57,5 +52,6 @@ class Model_Class():
         self.model, self.config = load_model(config=self.config)
 
     def is_model_loaded(self):
+        # TODO: bug: sometimes unsyncs with whether model is truly loaded or not
 
         return self.model is not None

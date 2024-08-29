@@ -1,16 +1,15 @@
 """
 File for output class
 
-Supports 3D image plotting
+Holds buffers of the downloadable items
+Avoid creating buffer everytime the page renders
 """
 
 from outputs.output_variations import *
 
 class Output_Class():
     """
-    Class for holding finetuned model and noisy and clean images
-
-    Provides options to download model and plot images for visual testing
+    Class for holding output buffers
     """
     def __init__(self):
         # Images are of format THW

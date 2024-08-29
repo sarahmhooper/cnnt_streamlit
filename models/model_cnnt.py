@@ -1,16 +1,13 @@
 """
-Convolutional Neural Net Transformer
+Original CNNT implementation
 
-A novel structure that combines the ideas behind CNNs and Transformers
-CNNT is able to utilize the temporal correlation while keeping the computations efficient
-
-At runtime a config dictionary is required to create the model
+Losses are also implemented here
+TODO: move losses to their own metrics category
 """
 
 import os
 import sys
 import math
-import numpy as np
 from math import exp
 from pathlib import Path
 
