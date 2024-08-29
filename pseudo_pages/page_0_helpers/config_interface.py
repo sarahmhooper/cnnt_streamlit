@@ -1,7 +1,13 @@
+"""
+Interface to update the config
+Only used in finetuning
+Inference uses the config of the loaded model
 
+TODO: Right now uses a hardcoded default update for finetuning
+Can be made so that the user has the option to change hyperparams
+"""
 
 import streamlit as st
-from datetime import datetime
 
 from utils.utils import *
 
@@ -12,7 +18,6 @@ from outputs.output_class import Output_Class
 ic : Input_Class = st.session_state.input_class
 mc : Model_Class = st.session_state.model_class
 oc : Output_Class = st.session_state.output_class
-
 
 def config_update_st():
 
@@ -34,14 +39,17 @@ def config_update_st():
         mc.update_config(config_update)
         mc.reload_model()
 
+    # TODO: Let the user change the hyperparams
+    # Using the st.data_editor can be a good choice
+    # Learn to change between Namespace and dict can be useful
     # current_config = mc.config
     # current_config_dict = vars(current_config)
-
+    # current_config_namespace = Namespace(**config)
     # st.data_editor(current_config_dict)
 
-    # print(current_config_dict)
-    # st.write(current_config_dict)
-
+# -------------------------------------------------------------------------------------------------
+# Some old code used to take the updates
+# Can be used/seen as refrence, but I think the above code can work better
 
 def get_config_update():
     #TODO: caliburate on machine setup
@@ -100,7 +108,7 @@ def get_config_update():
     def get_samples_per_image():
 
         return st.number_input("Number of train samples per image", min_value=1, format="%d", value=8)
-    
+
     config_update_dict["model_file_name"] = get_name()
 
     col1, col2, col3 = st.columns(3)
@@ -176,10 +184,10 @@ def make_complete_config(config):
             w = st.number_input("Optimizer weight decay", min_value=0.0, format="%f", value=0.1)
             g = st.number_input("Gradient norm clip", min_value=0.0, format="%f", value=1.0)
             c = st.number_input("Optimizer beta 2", min_value=0.0, format="%f", value=0.95)
-            
+
 
         return l, d, b, w, g, c
-        
+
     def misc_1():
 
         col1, col2, col3 = st.columns(3)
@@ -201,7 +209,7 @@ def make_complete_config(config):
     return config
 
 def get_format_a(col, format_a):
-    
+
     options = ("THW", "HWT")
 
     if format_a == "THW":

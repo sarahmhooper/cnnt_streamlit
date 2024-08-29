@@ -12,25 +12,25 @@ from skimage.util.shape import view_as_windows
 import streamlit as st
 
 
-def running_inference_per_image(model, image, 
-                    cutout=(24,256,256), overlap=(4,64,64), 
+def running_inference_per_image(model, image,
+                    cutout=(24,256,256), overlap=(4,64,64),
                     batch_size=8, device="cpu", placeholder=None):
     """
     runs inference by breaking image into cutout shapes with overlaps
     running the patches through the model and then repatching
-    @inputs:
-        model: the model to run inference with
-        image: the image to run inference on
+    @args:
+        - model: the model to run inference with
+        - image: the image to run inference on
                 requires the image to have ndim==3 or ndim==5
                 ndim==5 requires to be squeezable to ndim==3
                 takes either numpy or torch.tensor array
                 (going down to ndim==3 makes coding easier and cleaner)
-        cutout: the patch shape for each cutout
+        - cutout: the patch shape for each cutout
                 requires len(cutout)==3
-        overlap: the number of pixels to overlap
+        - overlap: the number of pixels to overlap
                 requires len(overlap)==3
-        batch_size: the batch_size for model input
-        device: the device to run inference on
+        - batch_size: the batch_size for model input
+        - device: the device to run inference on
     """
     #-----------------------------------------------------------------------
     # setup the model and image
@@ -54,10 +54,10 @@ def running_inference_per_image(model, image,
     To, Ho, Wo = overlap                # overlap
     Ts, Hs, Ws = Tc-To, Hc-Ho, Wc-Wo    # sliding window shape
     #-----------------------------------------------------------------------
-    # padding the image so we have a complete coverup 
+    # padding the image so we have a complete coverup
     # in each dim we pad the left side by overlap
     # and then cover the right side by what remains from the sliding window
-    image_pad = np.pad(image, 
+    image_pad = np.pad(image,
                         ((To, Ts-TO%Ts),
                         (Ho, Hs-HO%Hs),
                         (Wo, Ws-WO%Ws)),
@@ -95,7 +95,7 @@ def running_inference_per_image(model, image,
     for t in range(To):
         matrix_weight[t] *= ((t+1)/To)
         matrix_weight[-t-1] *= ((t+1)/To)
-    
+
     for h in range(Ho):
         matrix_weight[:,h] *= ((h+1)/Ho)
         matrix_weight[:,-h-1] *= ((h+1)/Ho)
@@ -164,7 +164,7 @@ def running_inference(model, cut_np_images, cutout, overlap, device):
     placeholder_2 = st.empty()
     placeholder_3 = st.empty()
 
-    
+
     for i, image in enumerate(image_list):
 
         p_bar.progress(i/num_images)

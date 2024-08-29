@@ -1,4 +1,12 @@
+"""
+Interface for downloading
+Changes the view depending on inference or finetuning
+Option of indvidual and all zipped for images
+Download as .pth for models
 
+Prepares the buffer for download right as the page loads
+and then save them as to not prepare them everytime the page renders
+"""
 
 import streamlit as st
 
@@ -11,7 +19,6 @@ from outputs.output_class import Output_Class
 ic : Input_Class = st.session_state.input_class
 mc : Model_Class = st.session_state.model_class
 oc : Output_Class = st.session_state.output_class
-
 
 def download_st():
 
@@ -35,7 +42,7 @@ def download_inference_interface(num_images):
     with col1:
         options = ["Download all as zip", "Download invidual"]
         d_typ = st.radio(
-            "Download Type", 
+            "Download Type",
             options,
             key="download_all"
         )
@@ -62,7 +69,7 @@ def download_inference_interface(num_images):
             st.download_button(
                 label="Download Predicted Clean Images",
                 data = oc.image_all_buffer, # Download buffer
-                file_name = 'All_predicted_clean_images.zip' 
+                file_name = 'All_predicted_clean_images.zip'
             )
 
 def download_finetuning_interface():

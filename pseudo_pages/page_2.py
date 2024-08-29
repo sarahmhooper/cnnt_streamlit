@@ -4,7 +4,6 @@ Third and final page of the UI
 Prepare the download option and plots images with interactive controls
 """
 
-
 import streamlit as st
 
 from utils.utils import *

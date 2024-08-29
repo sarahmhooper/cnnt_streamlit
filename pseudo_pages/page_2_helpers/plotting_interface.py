@@ -1,4 +1,9 @@
+"""
+Interface to plot the images
 
+This should be just a sanity check to make sure nothing went wrong
+Ideally the user would then download the images and then laod them up in imagej
+"""
 
 import streamlit as st
 
@@ -37,16 +42,16 @@ def plot_image(idx):
 
     noisy_im = ic.noisy_im_list[idx]
     clean_im = ic.clean_im_list[idx] if ic.clean_im_list is not None else None
-    
+
     predi_image = ic.predi_im_list[idx]
-    
+
     if predi_image is None:
-        predi_image = running_inference(mc.model, 
-                                            [ic.noisy_im_list[idx]], 
+        predi_image = running_inference(mc.model,
+                                            [ic.noisy_im_list[idx]],
                                             sst.args.cutout,
                                             sst.args.overlap,
                                             sst.args.device)[0]
-        
+
         ic.set_predi_im_idx(predi_image, idx)
 
     plot_three(name, noisy_im, predi_image, clean_im)

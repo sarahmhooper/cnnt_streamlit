@@ -1,7 +1,16 @@
 """
 Main file for the UI
 
-Keeps track of the pages and shares data in between
+Keeps track of the pages and shares data in between them
+
+Streamlit executes the entire code everytime the page renders.
+The page renders on every action.
+What is rendered is controlled by conditionals.
+
+Three classes keep track of their respective things:
+Input_Class: keeps track of input images and the predicted images
+Model_Class: keeps track of the model
+Output_Class: keeps track of the outputs
 """
 
 import datetime
@@ -14,6 +23,7 @@ from outputs.output_class import Output_Class
 
 def init_session_state():
     # Initializes the classes and page number
+    # Session state is used to keep track of shared params of a run
 
     args = arg_parse()
 
@@ -40,6 +50,8 @@ def init_session_state():
     if "datetime" not in st.session_state:
         st.session_state.datetime = now
 
+# prevpage and restart are unused as they are not helpful and can create bugs
+# expected run behaviour should go to the end and then refresh to page to begin again
 def nextpage(): st.session_state.page_num += 1
 def prevpage(): st.session_state.page_num -= 1
 def restart(): reset_session_state(); init_session_state()

@@ -1,5 +1,20 @@
+"""
+Interface for uploading and reading in the images
 
-import math
+Expected format is .tif/.tiff or .lif
+.tiff:
+    - 3D only
+    - axis order: THW
+.lif:
+    - (no restriction, code read them all as 3D THW)
+
+For inference only noisy are required
+For finetuning noisy and clean pairs are implicitly requested
+Sorted noisy and sorted clean images should have a 1-to-1 mapping
+
+TODO: add checks and error handling
+TODO: visualize images
+"""
 import streamlit as st
 
 from utils.utils import *
@@ -15,7 +30,7 @@ oc : Output_Class = st.session_state.output_class
 def image_reader_st():
 
     is_inf = is_inf_mode()
-    
+
     noisy_images = st.file_uploader("Noisy Image(s)", accept_multiple_files=True)
 
     clean_img_str = "Clean Image(s) (optional for comparison)" if is_inf else "Clean Image(s)"
@@ -32,6 +47,7 @@ def image_reader_st():
             set_scale_and_register_fnt()
 
 def display_image_info():
+    # creates a table and displays some information regarding the images
 
     def build_info_table():
 
@@ -55,6 +71,8 @@ def display_image_info():
     st.dataframe(build_info_table(), use_container_width=True)
 
 def set_scale_inf():
+    # sets the scale of the images when using inference
+    # since inference uses the model config to get the scale
 
     if not mc.is_model_loaded(): return
     im_value_scale = mc.config.im_value_scale
@@ -63,6 +81,8 @@ def set_scale_inf():
     ic.im_value_scale = im_value_scale
 
 def set_scale_and_register_fnt():
+    # ask the user to set a scale
+    # provide some defaults from inferred inputs type
 
     im_value_scale = infer_scale(ic.noisy_im_list[0])
 

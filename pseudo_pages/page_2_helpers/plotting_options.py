@@ -1,10 +1,9 @@
 """
-Main file for plotting images for visual inspection
+Interface for plotting images for visual inspection
 """
 
 import numpy as np
 import streamlit as st
-
 
 def scale_and_clip(image, min, max):
     # Scales the image to given min max and then clips it to [0,1]
@@ -28,7 +27,7 @@ def plot_image(image, col, key):
 
 
 def plot_three(name, noisy, cpred, clean=None):
-    # plot the given image pair
+    # plot the given image pair/triple
 
     st.write(f"Plotting Image {name}")
     image_frame = st.slider("Frame to Display", min_value=0, max_value=noisy.shape[0]-1 if not noisy.shape[0]==1 else 1, disabled=noisy.shape[0]==1)

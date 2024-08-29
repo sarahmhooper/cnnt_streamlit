@@ -2,8 +2,6 @@
 File for finetuning cycle
 Adjusted for display during streamlit session
 """
-import json
-import time
 import torch
 import numpy as np
 
@@ -60,7 +58,7 @@ def train(model, config, train_set, val_set):
         scheduler_on_batch = model.scheduler_on_batch
 
     st.write("Begin Training")
-    
+
     # Place holders for proper visuals
     placeholder_1 = st.empty()
     placeholder_2 = st.empty()
@@ -183,7 +181,7 @@ def run_val(model, config, val_set, device, placeholder_2, placeholder_3):
 # Save the model as .pt as .pts in save dir set at start
 
 def save_cnnt_model(model, config, last="", height=64, width=64):
-    
+
     try:
         model = model.cpu().module
     except:
@@ -206,7 +204,7 @@ def save_cnnt_model(model, config, last="", height=64, width=64):
 
     # torch.save(model.state_dict(), f"{model_file_name}.pth")
 
-    # model_scripted = torch.jit.trace(model, model_input, strict=False) 
+    # model_scripted = torch.jit.trace(model, model_input, strict=False)
     # model_scripted.save(f"{model_file_name}.pts")
 
     # with open(f"{model_file_name}.json", "w") as file:
@@ -220,7 +218,7 @@ def save_cnnt_model(model, config, last="", height=64, width=64):
 def show_image_frames(noisy, predi, clean, placeholder):
 
     frame_to_show = noisy.shape[0]//2
-    
+
     noisy = normalize_image(noisy, percentiles=(1,99), clip=True)
     predi = normalize_image(predi, percentiles=(1,99), clip=True)
     clean = normalize_image(clean, percentiles=(1,99), clip=True)

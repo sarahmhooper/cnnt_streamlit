@@ -1,12 +1,7 @@
 """
 Microscopy dataloader
 
-Takes h5files are keys
-Expected h5file format:
-<file> ---> <key> ---> "/noisy_im"
-                   |-> "/clean_im"
-
-In time seried data the noisy_im is 4D
+Modified to take in lists of images on setup
 """
 
 import torch
@@ -17,7 +12,7 @@ from utils.utils import *
 
 class MicroscopyDataset(Dataset):
     """
-    Dataset for loading microscopy data from h5files.
+    Dataset for loading microscopy data from lists.
     """
 
     def __init__(self, noisy_im_list, clean_im_list,
@@ -29,8 +24,9 @@ class MicroscopyDataset(Dataset):
         Initilize the denoising dataset
 
         @args:
-            - h5files (h5file list): list of h5files to load images from
-            - keys (str list list): List of list of keys. For every h5file, a list of keys are provided
+            - noisy_im_list (npy list): list of noisy images
+            - clean_im_list (npy list): list of clean images
+            - time_cutout (int): time cutout for the first dim
             - cutout_shape (2 tuple int): patch size. Defaults to [64, 64]
             - num_samples_per_file (int): number of patches to cut out per image
             - test (bool): whether this dataset is for evaluating test set. Does not make a cutout if True
@@ -38,10 +34,6 @@ class MicroscopyDataset(Dataset):
             - im_value_scale (2 tuple int): the value to scale with
             - valu_thres (float): threshold of pixel value between background and foreground
             - area_thres (float): percentage threshold of area that needs to be foreground
-            - time_scale (int): the time scale for time experiments
-                - == 0: not time scaled exp
-                - > 0: use the given time scale for making the average image
-                - < 0: use all the time scale for making the average image
         """
         self.noisy_im_list = noisy_im_list
         self.clean_im_list = clean_im_list
@@ -56,7 +48,6 @@ class MicroscopyDataset(Dataset):
         self.im_value_scale = im_value_scale
         self.valu_thres = valu_thres
         self.area_thres = area_thres
-        
 
         if per_scaling:
             self.noisy_im_list = [normalize_image(noisy_data, percentiles=(1.5, 99.5), clip=True) for noisy_data in self.noisy_im_list]
@@ -77,9 +68,7 @@ class MicroscopyDataset(Dataset):
             noisy_cutout = noisy_data[:,np.newaxis,:,:]
             clean_cutout = clean_data[:,np.newaxis,:,:]
 
-            train_noise = noisy_cutout
-
-            noisy_im = torch.from_numpy(train_noise.astype(np.float32))
+            noisy_im = torch.from_numpy(noisy_cutout.astype(np.float32))
             clean_im = torch.from_numpy(clean_cutout.astype(np.float32))
 
             return noisy_im, clean_im
@@ -109,9 +98,7 @@ class MicroscopyDataset(Dataset):
             noisy_cutout = self.do_cutout(noisy_data, s_x, s_y, s_t)[:,np.newaxis,:,:]
             clean_cutout = self.do_cutout(clean_data, s_x, s_y, s_t)[:,np.newaxis,:,:]
 
-            train_noise = noisy_cutout
-
-            noisy_im = torch.from_numpy(train_noise.astype(np.float32))
+            noisy_im = torch.from_numpy(noisy_cutout.astype(np.float32))
             clean_im = torch.from_numpy(clean_cutout.astype(np.float32))
 
         return noisy_im, clean_im

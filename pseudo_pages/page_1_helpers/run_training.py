@@ -1,4 +1,9 @@
-
+"""
+Interface for finetuning
+Shows the total progress and progress per epoch with val image every save_epoch cycle
+Does not allow user interaction but does not stop it either
+If user interacts with dead widgets on the screen it can error out
+"""
 
 import streamlit as st
 
@@ -35,13 +40,13 @@ def data_setup(config, noisy_im_list, clean_im_list):
     for h, w in zip(config.height, config.width):
         train_set.append(MicroscopyDataset(noisy_im_list=noisy_im_list, clean_im_list=clean_im_list,
                                             time_cutout=config.time, cutout_shape=(h, w),
-                                            num_samples_per_file=8,
-                                            im_value_scale=config.im_value_scale)
+                                            num_samples_per_file=8, test=False,
+                                            im_value_scale=[0,1])
         )
 
     val_set = MicroscopyDataset(noisy_im_list=[noisy_im_list[0]], clean_im_list=[clean_im_list[0]],
                                 time_cutout=config.time, cutout_shape=(h, w),
                                 num_samples_per_file=1, test=True,
-                                im_value_scale=config.im_value_scale)
+                                im_value_scale=[0,1])
 
     return train_set, val_set

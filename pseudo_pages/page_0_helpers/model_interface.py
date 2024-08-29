@@ -1,4 +1,9 @@
+"""
+Interface for model setup
 
+Lets user choose a model from the list
+Or upload a model that they have finetuned beforehand
+"""
 
 import streamlit as st
 
@@ -22,13 +27,14 @@ def model_setup_st():
 
     col1, col2 = placeholder1.columns([3, 1])
 
-    # TODO: Empty and Upload:
+    # TODO: Let user train an empty model:
     # model_name = st.selectbox("Select the model to use for fine tuning", ["Select a Model", "Empty Model (Train from scratch)", "Upload a Model", *model_list])
     model_name = col1.selectbox("Select the model", model_list, index=None,\
                                 placeholder="Select the model by clicking here", label_visibility="collapsed")
 
     if model_name == "Upload a Model":
         model_file = get_model()
+
     def load_model_wrapper():
         placeholder2.text(f"Model loading in progress: {model_name}")
         mc.load_model(model_name, model_file)
