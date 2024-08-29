@@ -132,3 +132,5 @@ dmypy.json
 tmp/
 # folder for env
 st_env/
+
+.vscode/

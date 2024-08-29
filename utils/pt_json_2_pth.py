@@ -1,15 +1,18 @@
+"""
+File to convert the older version model saving to the new one
 
+.pt + .json to .pth
 
+Point it to a directory and it will convert them all
+"""
 
 import os
+import sys
 import json
 import torch
 from argparse import Namespace
-from models.model_cnnt import CNNT_enhanced_denoising_runtime
 
-
-models_dir = "./saved_models"
-
+models_dir = sys.argv[1]
 
 for name in os.listdir(models_dir):
 
@@ -25,9 +28,6 @@ for name in os.listdir(models_dir):
     config = json.load(open(model_js_path))
     config = Namespace(**config)
     config.load_path = None
-    # model = CNNT_enhanced_denoising_runtime(config=config)
-
-
 
     torch.save({
         "epoch":config.num_epochs,
@@ -35,8 +35,4 @@ for name in os.listdir(models_dir):
         "config": config,
     }, f"{model_pt_path}h")
 
-    
     print("done", name)
-
-
-

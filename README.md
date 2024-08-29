@@ -21,3 +21,7 @@ streamlit run main.py --server.maxUploadSize 51200 -- --model_path_dir ./saved_m
 ```
 
 Your default browser should open with the streamlit user interface ready to go!
+
+Provides two pretrained model:
+- ./saved_models/cnnt_Microscopy...pth : Backbone model trained with 3DRCAN iSIM denoising data
+- ./saved_models/Tile_test_AV_1.pth : Finetuned model for confocal data

@@ -62,13 +62,13 @@ def flatten(l):
 def normalize_image(image, percentiles=None, values=None, clip=True):
     """
     Normalizes image locally.
-    @inputs:
-        image: nd numpy array or torch tensor
-        percentiles: pair of percentiles ro normalize with
-        values: pair of values normalize with
+    @args:
+        - image: nd numpy array or torch tensor
+        - percentiles: pair of percentiles ro normalize with
+        - values: pair of values normalize with
         NOTE: only one of percentiles and values is required
-    @return:
-        n_img: the image normalized wrt given params.
+    @rets:
+        - n_img: the image normalized wrt given params.
     """
 
     assert (percentiles==None and values!=None) or (percentiles!=None and values==None)
