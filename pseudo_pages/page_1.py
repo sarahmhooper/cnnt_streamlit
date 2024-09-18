@@ -17,7 +17,7 @@ sst = st.session_state
 
 def page_1():
 
-    if is_inf_mode:
+    if is_inf_mode():
         run_inference_st()
     else:
         run_training_st()
