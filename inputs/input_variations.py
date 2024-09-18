@@ -131,10 +131,13 @@ def read_inputs(input_list_raw):
         - noisy_im_list: list of noisy image, eachone as a 3D-array (T, H, W)
     """
     # save names for later
-    im_names = [x.name for x in sorted(input_list_raw)]
+    im_names = [x.name for x in input_list_raw]
     # get extension to select how to read. Assumes all files have same extension. 
-    # TODO: add this check that enforces all files have same extension
     file_ext = pathlib.Path(im_names[0]).suffix.lower()
+
+    all_file_exts = [pathlib.Path(im_name).suffix.lower() for im_name in im_names]
+    assert len(set(all_file_exts))==1, "All files must have same filetype."
+    
     # convert raw data to bytes data
     input_list = [BytesIO(x.read()) for x in input_list_raw]
 
