@@ -42,7 +42,7 @@ def check_args(args):
 
     if args.cuda_devices == "cuda":
         args.device = "cuda"
-    elif args.cuda_devices is not None:
+    elif args.cuda_devices not in [None,"None"]:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_devices
         args.device = "cuda"
     else:
