@@ -69,6 +69,8 @@ disable_next = (sst.page_num >= 2)
 
 if sst.page_num == 0:
     sst.run_type = st.radio("Run type?", ["Inference", "Finetuning"], horizontal=True, label_visibility="hidden")
+    is_inf = is_inf_mode()
+    title_str = "Inference" if is_inf else "Finetuning"
     st.title(f"{title_str} Session: Setup")
     page_0()
     disable_next |= (not sst.model_class.is_model_loaded())
