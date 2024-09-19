@@ -50,7 +50,7 @@ def train(model, config, train_set, val_set):
 
     model.to(device)
 
-    if config.dp:
+    if config.dp and device=="cuda":
         scheduler = model.module.scheduler
         scheduler_on_batch = model.module.scheduler_on_batch
     else:
@@ -92,7 +92,7 @@ def train(model, config, train_set, val_set):
             output = model(x)
             weights = None
 
-            if config.dp:
+            if config.dp and device=="cuda":
                 loss = model.module.compute_loss(output, y, weights, epoch, config)
             else:
                 loss = model.compute_loss(output, y, weights, epoch, config)
@@ -103,7 +103,7 @@ def train(model, config, train_set, val_set):
             if(config.clip_grad_norm>0):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip_grad_norm)
 
-            model.module.optim.step() if config.dp else model.optim.step()
+            model.module.optim.step() if (config.dp and device=="cuda") else model.optim.step()
 
             if (scheduler is not None) and scheduler_on_batch:
                 scheduler.step()
@@ -166,7 +166,7 @@ def run_val(model, config, val_set, device, placeholder_2, placeholder_3):
     placeholder_2.empty()
 
     clean_pred_torch = normalize_image(clean_pred_torch, values=(0,1), clip=True)
-    loss = model.module.compute_loss(output=clean_pred_torch, targets=clean_image, weights=None).item() if config.dp else \
+    loss = model.module.compute_loss(output=clean_pred_torch, targets=clean_image, weights=None).item() if (config.dp and device=="cuda") else \
            model.compute_loss(output=clean_pred_torch, targets=clean_image, weights=None).item()
     ssim3D_loss = ssim3D_loss_func(clean_pred_torch, clean_image, weights=None).item()
     psnr_val = psnr_func(clean_pred_torch, clean_image).item()
