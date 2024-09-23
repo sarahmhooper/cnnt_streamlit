@@ -9,6 +9,7 @@ Stores all as 3D images after loading
 
 from inputs.input_variations import read_inputs
 from utils.utils import normalize_image, register_translation_3D
+import numpy as np
 
 class Input_Class():
     """
@@ -51,6 +52,8 @@ class Input_Class():
             if len(clean_list_filtered):
                 self.clean_im_names, self.clean_im_list = read_inputs(clean_list_filtered)
                 self.read_clean_im_names.update([x.name for x in clean_list_filtered])
+
+                assert np.all([clean_im.shape==noisy_im.shape for clean_im,noisy_im in zip(self.noisy_im_list,self.clean_im_list)]), "All paired noisy and clean images do not have the same shape. Please start a new session and ensure each noisy/clean pair has the same image shape."
 
         return 0
 
