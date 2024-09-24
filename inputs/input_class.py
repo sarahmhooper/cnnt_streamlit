@@ -53,8 +53,15 @@ class Input_Class():
                 self.clean_im_names, self.clean_im_list = read_inputs(clean_list_filtered)
                 self.read_clean_im_names.update([x.name for x in clean_list_filtered])
 
-                assert np.all([clean_im.shape==noisy_im.shape for clean_im,noisy_im in zip(self.noisy_im_list,self.clean_im_list)]), "All paired noisy and clean images do not have the same shape. Please start a new session and ensure each noisy/clean pair has the same image shape."
-
+                assertion_string = "All paired noisy and clean images do not have the same shape. "
+                assertion_shapes = False
+                for clean_im, clean_im_name, noisy_im, noisy_im_name in zip(self.clean_im_list,self.clean_im_names,self.noisy_im_list,self.noisy_im_names):
+                    if clean_im.shape != noisy_im.shape:
+                        assertion_string += f"{clean_im_name} has shape {clean_im.shape}, {noisy_im_name} has shape {noisy_im.shape}. "
+                        assertion_shapes = True
+                assertion_string += "Please start a new session and ensure each noisy/clean pair has the same image shape."
+                assert assertion_shapes==False, assertion_string
+                
         return 0
 
     def get_num_images(self):
