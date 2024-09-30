@@ -35,7 +35,12 @@ def write_tiff_zip(image_list, names_list):
         for i, image in enumerate(image_list):
             temp_buff = write_tiff(image)
             buffer_list.append(temp_buff)
-            myzip.writestr(f"{names_list[i]}_predicted.tiff", temp_buff.getvalue())
+
+            name = names_list[i]
+            if name[-1]=='/': name = name[:-1]
+            name = name.replace('.lif','').replace('.tiff','').replace('.tif','')
+            
+            myzip.writestr(f"{name}_predicted.tiff", temp_buff.getvalue())
 
     return final_buffer, buffer_list
 
