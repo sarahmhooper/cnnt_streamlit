@@ -20,11 +20,15 @@ class Output_Class():
         self.model_buffer = None
 
     def prepare_download_image_all(self, image_list, names_list):
-        
+
         if self.image_all_buffer is None:
             self.image_all_buffer, self.image_idx_buffer = write_tiff_zip(image_list, names_list)
-            self.image_names_list = [f"{name}_predicted.tiff" for name in names_list]
-
+            self.image_names_list = []
+            for name in names_list:
+                if name[-1]=='/': name = name[:-1]
+                name = name.replace('.lif','').replace('.tiff','').replace('.tif','')
+                self.image_names_list += [f"{name}_predicted.tiff"]
+                
         return self.image_all_buffer
     
     def prepare_download_model(self, model, config):
