@@ -10,6 +10,7 @@ Stores all as 3D images after loading
 from inputs.input_variations import read_inputs
 from utils.utils import normalize_image, register_translation_3D
 import numpy as np
+import streamlit as st
 
 class Input_Class():
     """
@@ -87,4 +88,12 @@ class Input_Class():
 
         # TODO: add parellism for faster execution
         if self.register_image_check:
-            self.noisy_im_list = [register_translation_3D(noisy_im, clean_im) for noisy_im, clean_im in zip(self.noisy_im_list, self.clean_im_list)]
+            modified_noisy_im_list = []
+            current_count = 1
+            total_count = len(self.noisy_im_list)
+            for noisy_im, clean_im in zip(self.noisy_im_list, self.clean_im_list):
+                st.write(f"Registering image {current_count} of {total_count}")
+                modified_noisy_im_list += [register_translation_3D(noisy_im, clean_im)]
+                current_count += 1
+            self.noisy_im_list = modified_noisy_im_list
+
