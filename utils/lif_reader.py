@@ -748,13 +748,21 @@ class Serie(SerieHeader):
                     self.getName())
                                 )
 
-        self.f.seek(self.getOffset(**dimensionsIncrements))
-        shape = self.get2DShape()
-        return np.fromfile(
-            self.f,
-            dtype=self.dtype,
-            count=self.getNbPixelsPerSlice()
-        ).reshape(shape)
+        try:
+            # Use numpy.fromfile directly
+            self.f.seek(self.getOffset(**dimensionsIncrements))
+            shape = self.get2DShape()
+            return_array = np.fromfile(self.f,dtype=self.dtype,count=self.getNbPixelsPerSlice()).reshape(shape)
+        except:
+            # Read the data into memory first
+            self.f.seek(self.getOffset(**dimensionsIncrements))
+            shape = self.get2DShape()
+            data = self.f.read(self.getNbPixelsPerSlice()) # Read the data into memory first
+            return_array = np.frombuffer(data, dtype=self.dtype).reshape(shape)
+        
+        return return_array
+
+
 
     def get2DString(self, **dimensionsIncrements):
         """
@@ -786,8 +794,17 @@ class Serie(SerieHeader):
         zyx = np.zeros(self.getFrameShape(), dtype=dtype)
         channels = self.getChannels()
         for z in range(self.getFrameShape()[0]):
-            self.f.seek(self.getOffset(T=T, Z=z) + self.getChannelOffset(channel))
-            zyx[z] = np.fromfile(self.f, dtype=dtype, count=int(self.getNbPixelsPerSlice())).reshape(self.get2DShape())
+            
+            try:
+                # Use numpy.fromfile directly
+                self.f.seek(self.getOffset(T=T, Z=z) + self.getChannelOffset(channel))
+                zyx[z] = np.fromfile(self.f, dtype=dtype, count=int(self.getNbPixelsPerSlice())).reshape(self.get2DShape())
+            except:
+                # Read the data into memory first
+                self.f.seek(self.getOffset(T=T, Z=z) + self.getChannelOffset(channel))
+                data = self.f.read(int(self.getNbPixelsPerSlice())) # Read the data into memory first
+                zyx[z] = np.frombuffer(data, dtype=dtype).reshape(self.get2DShape())
+
         return zyx
 
 
@@ -807,9 +824,15 @@ class Serie(SerieHeader):
         channels = self.getChannels()
         cyx = []
         for i in range(len(channels)):
-            self.f.seek(self.getOffset(**dict({'T': T})) + self.getChannelOffset(i))
-            yx = np.fromfile(self.f, dtype=dtype, count=int(self.getNbPixelsPerSlice()))
-            yx = yx.reshape(self.get2DShape())
+            try:
+                # Use numpy.fromfile directly
+                self.f.seek(self.getOffset(**dict({'T': T})) + self.getChannelOffset(i))
+                yx = np.fromfile(self.f, dtype=dtype, count=int(self.getNbPixelsPerSlice())).reshape(self.get2DShape())
+            except:
+                # Read the data into memory first
+                self.f.seek(self.getOffset(**dict({'T': T})) + self.getChannelOffset(i))
+                data = self.f.read(int(self.getNbPixelsPerSlice())) # Read the data into memory first
+                yx = np.frombuffer(data, dtype=dtype).reshape(self.get2DShape())
             cyx.append(yx)
         cyx = np.array(cyx)
         return cyx[channel]
@@ -905,34 +928,34 @@ class Serie(SerieHeader):
             self.f.seek(self.getOffset(**dict({'T': T})))
             f.write(self.f.read(self.getNbPixelsPerFrame()))
 
-    def enumByFrame(self):
-        """yield time steps one after the other as a couple (time,numpy array).
-        It is not safe to combine this syntax with getFrame or get2DSlice.
+    # def enumByFrame(self):
+    #     """yield time steps one after the other as a couple (time,numpy array).
+    #     It is not safe to combine this syntax with getFrame or get2DSlice.
 
-        This implementation works only for single channel series.
-        """
-        self.f.seek(self.getOffset())
-        for t in range(self.getNbFrames()):
-            yield t, np.fromfile(
-                self.f,
-                dtype=self.dtype,
-                count=self.getNbPixelsPerFrame()
-            ).reshape(self.getFrameShape())
+    #     This implementation works only for single channel series.
+    #     """
+    #     self.f.seek(self.getOffset())
+    #     for t in range(self.getNbFrames()):
+    #         yield t, np.fromfile(
+    #             self.f,
+    #             dtype=self.dtype,
+    #             count=self.getNbPixelsPerFrame()
+    #         ).reshape(self.getFrameShape())
 
-    def enumBySlice(self):
-        """yield 2D slices one after the other as a 3-tuple (time,z,numpy array).
-        It is not safe to combine this syntax with getFrame or get2DSlice.
+    # def enumBySlice(self):
+    #     """yield 2D slices one after the other as a 3-tuple (time,z,numpy array).
+    #     It is not safe to combine this syntax with getFrame or get2DSlice.
 
-        This implementation works only for single channel series.
-        """
-        self.f.seek(self.getOffset())
-        for t in range(self.getNbFrames()):
-            for z in range(self.getNbPixelsPerFrame() / self.getNbPixelsPerSlice()):
-                yield t, z, np.fromfile(
-                    self.f,
-                    dtype=self.dtype,
-                    count=self.getNbPixelsPerSlice()
-                ).reshape(self.get2DShape())
+    #     This implementation works only for single channel series.
+    #     """
+    #     self.f.seek(self.getOffset())
+    #     for t in range(self.getNbFrames()):
+    #         for z in range(self.getNbPixelsPerFrame() / self.getNbPixelsPerSlice()):
+    #             yield t, z, np.fromfile(
+    #                 self.f,
+    #                 dtype=self.dtype,
+    #                 count=self.getNbPixelsPerSlice()
+    #             ).reshape(self.get2DShape())
 
 
 class SerieHeaderCollection:
@@ -1059,22 +1082,22 @@ class SerieCollection(SerieHeaderCollection):
         s,t = self.time2series(T)
         return self.series[s].getFrame2D(T=t, *args, **kwargs)
 
-    def enumByFrame(self):
-        """yield time steps one after the other as a couple (time,numpy array).
-        It is not safe to combine this syntax with getFrame or get2DSlice.
-        """
-        for i, s in enumerate(self.series):
-            for t, frame in s.enumByFrame():
-                if i>0:
-                    t += self._cumNbFrames[i-1]
-                yield t, frame
+    # def enumByFrame(self):
+    #     """yield time steps one after the other as a couple (time,numpy array).
+    #     It is not safe to combine this syntax with getFrame or get2DSlice.
+    #     """
+    #     for i, s in enumerate(self.series):
+    #         for t, frame in s.enumByFrame():
+    #             if i>0:
+    #                 t += self._cumNbFrames[i-1]
+    #             yield t, frame
 
-    def enumBySlice(self):
-        """yield 2D slices one after the other as a 3-tuple (time,z,numpy array).
-        It is not safe to combine this syntax with getFrame or get2DSlice.
-        """
-        for i, s in enumerate(self.series):
-            for t,z, frame in s.enumBySlice():
-                if i>0:
-                    t += self._cumNbFrames[i-1]
-                yield t, z, frame
+    # def enumBySlice(self):
+    #     """yield 2D slices one after the other as a 3-tuple (time,z,numpy array).
+    #     It is not safe to combine this syntax with getFrame or get2DSlice.
+    #     """
+    #     for i, s in enumerate(self.series):
+    #         for t,z, frame in s.enumBySlice():
+    #             if i>0:
+    #                 t += self._cumNbFrames[i-1]
+    #             yield t, z, frame

@@ -14,6 +14,13 @@ from io import BytesIO
 from utils.utils import *
 from readlif.reader import LifFile
 
+import sys
+parent_path = pathlib.Path(__file__).parent.absolute().parent
+sys.path.append(os.path.join(parent_path))
+sys.path.append(os.path.join(parent_path, 'utils'))
+sys.path.append(os.path.join(parent_path, 'utils/lif_reader'))
+import lif_reader
+
 # -------------------------------------------------------------------------------------------------
 # Multiple input types
 
@@ -85,16 +92,36 @@ def read_lifs(input_list, lif_names):
         - im_list: list of noisy image, eachone as a 3D-array (H, W, T)
         - im_names: names of the noisy images, taken from the lif file
     """
-    file_list = [LifFile(x) for x in input_list]
 
     im_list = []
     im_names = []
 
-    for i, file in enumerate(file_list):
+    for lif_filepath, lif_name in zip(input_list, lif_names):
+
+        reader = lif_reader.Reader(lif_filepath)
+        series = reader.getSeries()
+        chosen = series[0]  # choose first image in the lif file
+
+        chosen_metadata = chosen.getMetadata()
+        number_of_channels = chosen_metadata['channel_number']
+        number_of_frames = chosen_metadata['frame_number']
+
+        for channel_number in range(number_of_channels):
+            for frame_number in range(number_of_frames):
+                im_list += [chosen.getFrame(T=frame_number, channel=channel_number)]
+                im_names += [f"{lif_name}/Channel_{channel_number}_Frame_{frame_number}"]
+
+
+    # file_list = [LifFile(x) for x in input_list]
+
+    # im_list = []
+    # im_names = []
+
+    # for i, file in enumerate(file_list):
         
-        tuple_list = [iter_c(image, f"{lif_names[i]}/{image.name}_") for image in file.get_iter_image()]
-        im_list.extend(flatten([x[0] for x in tuple_list]))
-        im_names.extend(flatten([x[1] for x in tuple_list]))
+        # tuple_list = [iter_c(image, f"{lif_names[i]}/{image.name}_") for image in file.get_iter_image()]
+        # im_list.extend(flatten([x[0] for x in tuple_list]))
+        # im_names.extend(flatten([x[1] for x in tuple_list]))
 
     return im_list, im_names
 
