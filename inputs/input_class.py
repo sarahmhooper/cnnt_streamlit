@@ -96,4 +96,3 @@ class Input_Class():
                 modified_noisy_im_list += [register_translation_3D(noisy_im, clean_im)]
                 current_count += 1
             self.noisy_im_list = modified_noisy_im_list
-

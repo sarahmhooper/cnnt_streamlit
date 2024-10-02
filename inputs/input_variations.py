@@ -148,5 +148,5 @@ def read_inputs(input_list_raw):
             im_list = read_tiffs(input_list)
         except:
             raise FileTypeNotSupported(f"File type input not supported:{file_ext}", file_ext)
-    
+        
     return im_names, im_list
